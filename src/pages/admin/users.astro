@@ -45,8 +45,8 @@ import ConfirmModal from '../../components/ConfirmModal.astro';
 </AdminLayout>
 
 <script type="module">
-  import { showToast } from '/src/lib/toast.js';
-  import { getUsers, deleteUser } from '/src/lib/firebaseUsers.js';
+  import { showToast } from '../../../lib/toast.js';
+  import { getUsers, deleteUser } from '../../../lib/firebaseUsers.js';
 
   document.addEventListener('DOMContentLoaded', () => {
     const tbody = document.getElementById('users-tbody');

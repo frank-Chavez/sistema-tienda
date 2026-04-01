@@ -173,8 +173,8 @@ import Layout from '../layouts/Layout.astro';
 </Layout>
 
 <script type="module">
-  import { authStore } from '/src/store/auth.js';
-  import { showToast } from '/src/lib/toast.js';
+  import { authStore } from '../../store/auth.js';
+  import { showToast } from '../../lib/toast.js';
 
   document.addEventListener('DOMContentLoaded', () => {
     if (authStore.isLoggedIn()) {

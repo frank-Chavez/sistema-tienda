@@ -111,12 +111,12 @@ import ConfirmModal from '../../components/ConfirmModal.astro';
 </AdminLayout>
 
 <script type="module">
-  import { showToast } from '/src/lib/toast.js';
+  import { showToast } from '../../../lib/toast.js';
   import {
     getOrders,
     updateOrderStatus,
     deleteOrder,
-  } from '/src/lib/firebaseOrders.js';
+  } from '../../../lib/firebaseOrders.js';
 
   document.addEventListener('DOMContentLoaded', () => {
     const tbody = document.getElementById('orders-tbody');
@@ -193,7 +193,7 @@ import ConfirmModal from '../../components/ConfirmModal.astro';
             const order = orders.find((o) => o.id === id);
             if (order && order.productos) {
               const { updateStock } =
-                await import('/src/lib/firebaseProducts.js');
+                await import('../../lib/firebaseProducts.js');
               for (const producto of order.productos) {
                 await updateStock(producto.id, producto.cantidad);
               }

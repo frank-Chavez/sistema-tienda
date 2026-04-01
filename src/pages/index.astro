@@ -335,7 +335,7 @@ import ProductCard from '../components/ProductCard.astro';
           const stock = parseInt(button.dataset.productStock || '0');
 
           // @ts-ignore
-          const { cartStore } = await import('/src/store/cart.js');
+          const { cartStore } = await import('../store/cart.js');
 
           if (id && name && image) {
             cartStore.addItem({ id, name, price, image, stock }, 1);

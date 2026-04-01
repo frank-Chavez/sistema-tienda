@@ -13,8 +13,8 @@ import ConfirmModal from '../../components/ConfirmModal.astro';
 
     <main class="grow p-4 md:p-8 w-full max-w-full overflow-hidden relative">
       <script type="module">
-        import { authStore } from '/src/store/auth.js';
-        import { showToast } from '/src/lib/toast.js';
+        import { authStore } from '../../../store/auth.js';
+        import { showToast } from '../../../lib/toast.js';
 
         if (!authStore.isAdmin()) {
           window.location.href = '/login';
@@ -232,16 +232,16 @@ import ConfirmModal from '../../components/ConfirmModal.astro';
 </Layout>
 
 <script type="module">
-  import { authStore } from '/src/store/auth.js';
-  import { showToast } from '/src/lib/toast.js';
-  import { getCategories } from '/src/lib/firebaseCategories.js';
+  import { authStore } from '../../../store/auth.js';
+  import { showToast } from '../../../lib/toast.js';
+  import { getCategories } from '../../../lib/firebaseCategories.js';
 
   import {
     getProducts,
     createProduct,
     deleteProduct,
     updateProduct, // 👈 IMPORTANTE (debes tenerlo en tu firebaseProducts.js)
-  } from '/src/lib/firebaseProducts.js';
+  } from '../../../lib/firebaseProducts.js';
 
   const tbody = document.getElementById('products-tbody');
 

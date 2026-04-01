@@ -239,7 +239,7 @@ import CartItemTemplate from '../components/CartItem.astro'; // Using the slot t
 
         // ✅ CREAR PEDIDO EN FIRESTORE
         // @ts-ignore
-        const { createOrder } = await import('/src/lib/firebaseOrders.js');
+        const { createOrder } = await import('../lib/firebaseOrders.js');
 
         const orderData = {
           usuarioId: user ? user.id : 'invitado',
