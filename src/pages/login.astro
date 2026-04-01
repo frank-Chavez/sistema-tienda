@@ -173,7 +173,9 @@ import { authStore } from '../store/auth.js';
   </div>
 </Layout>
 
-<script type="module" define:vars={{ authStore }}>
+<script type="module">
+  import { authStore } from '../store/auth.js';
+
   // Toast function inlined to avoid import issues in static builds
   function showToast(message, type = 'info', duration = 3200) {
     if (typeof window === 'undefined') return;

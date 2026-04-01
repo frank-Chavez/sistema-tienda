@@ -136,7 +136,10 @@ import { showToast } from '../lib/toast.js';
   <CartItemTemplate />
 </Layout>
 
-<script type="module" define:vars={{ cartStore, authStore }}>
+<script type="module">
+  import { cartStore } from '../store/cart.js';
+  import { authStore } from '../store/auth.js';
+
   // Toast function inlined to avoid import issues in static builds
   function showToast(message, type = 'info', duration = 3200) {
     if (typeof window === 'undefined') return;
@@ -196,9 +199,7 @@ import { showToast } from '../lib/toast.js';
 
   document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('cart-items-container');
-    const template = document.getElementById(
-      'cart-item-template'
-    );
+    const template = document.getElementById('cart-item-template');
     const emptyState = document.getElementById('cart-empty');
     const summary = document.getElementById('cart-summary');
 

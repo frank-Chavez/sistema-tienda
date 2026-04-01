@@ -196,7 +196,11 @@ import { getOrders } from '../../lib/firebaseOrders.js';
   </div>
 </AdminLayout>
 
-<script type="module" define:vars={{ getProducts, getUsers, getOrders }}>
+<script type="module">
+  import { getProducts } from '../../lib/firebaseProducts.js';
+  import { getUsers } from '../../lib/firebaseUsers.js';
+  import { getOrders } from '../../lib/firebaseOrders.js';
+
   document.addEventListener('DOMContentLoaded', async () => {
     const statProducts = document.getElementById('stat-products');
     const statUsers = document.getElementById('stat-users');

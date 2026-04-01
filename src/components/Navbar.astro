@@ -154,7 +154,10 @@ import { cartStore } from '../store/cart.js';
   </div>
 </nav>
 
-<script type="module" define:vars={{ authStore, cartStore }}>
+<script type="module">
+  import { authStore } from '../store/auth.js';
+  import { cartStore } from '../store/cart.js';
+
   // Toggle mobile menu
   const mobileBtn = document.getElementById('mobile-menu-btn');
   const mobileMenu = document.getElementById('mobile-menu');

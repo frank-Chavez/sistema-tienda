@@ -11,9 +11,7 @@ import { getUsers, deleteUser } from '../../lib/firebaseUsers.js';
 >
   <div>
     <div class="mb-8">
-      <h1 class="text-3xl font-black text-gray-900 tracking-tight">
-        Usuarios
-      </h1>
+      <h1 class="text-3xl font-black text-gray-900 tracking-tight">Usuarios</h1>
       <p class="text-gray-500 mt-1">
         Lista de clientes y administradores registrados en la plataforma.
       </p>
@@ -37,16 +35,17 @@ import { getUsers, deleteUser } from '../../lib/firebaseUsers.js';
               <th class="py-4 px-6 font-semibold text-right">Acciones</th>
             </tr>
           </thead>
-          <tbody
-            id="users-tbody"
-            class="divide-y divide-gray-100 text-gray-700"></tbody>
+          <tbody id="users-tbody" class="divide-y divide-gray-100 text-gray-700"
+          ></tbody>
         </table>
       </div>
     </div>
   </div>
 </AdminLayout>
 
-<script type="module" define:vars={{ showToast, getUsers, deleteUser }}>
+<script type="module">
+  import { getUsers, deleteUser } from '../../lib/firebaseUsers.js';
+
   // Toast function inlined to avoid import issues in static builds
   function showToast(message, type = 'info', duration = 3200) {
     if (typeof window === 'undefined') return;

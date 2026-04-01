@@ -21,7 +21,9 @@ import { authStore } from '../store/auth.js';
   <slot />
 </div>
 
-<script type="module" define:vars={{ authStore }}>
+<script type="module">
+  import { authStore } from '../store/auth.js';
+
   // 🔒 VERIFICACIÓN DE ADMIN - Se ejecuta inmediatamente
   async function protectAdminRoute() {
     const loadingGuard = document.getElementById('loading-guard');

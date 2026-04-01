@@ -64,9 +64,7 @@ import { updateStock } from '../../lib/firebaseProducts.js';
         <div
           class="p-6 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10"
         >
-          <h2 class="text-2xl font-black text-gray-900">
-            Detalles del Pedido
-          </h2>
+          <h2 class="text-2xl font-black text-gray-900">Detalles del Pedido</h2>
           <button
             id="close-order-modal"
             class="text-gray-400 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition-colors"
@@ -117,7 +115,10 @@ import { updateStock } from '../../lib/firebaseProducts.js';
   </div>
 </AdminLayout>
 
-<script type="module" define:vars={{ showToast, getOrders, updateOrderStatus, deleteOrder, updateStock }}>
+<script type="module">
+  import { getOrders, updateOrderStatus, deleteOrder } from '../../lib/firebaseOrders.js';
+  import { updateStock } from '../../lib/firebaseProducts.js';
+
   // Toast function inlined to avoid import issues in static builds
   function showToast(message, type = 'info', duration = 3200) {
     if (typeof window === 'undefined') return;

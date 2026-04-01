@@ -74,7 +74,10 @@ import {
   <ConfirmModal id="delete-cat-modal" />
 </AdminLayout>
 
-<script type="module" define:vars={{ authStore, showToast, getCategories, createCategory, deleteCategory }}>
+<script type="module">
+  import { authStore } from '../../store/auth.js';
+  import { getCategories, createCategory, deleteCategory } from '../../lib/firebaseCategories.js';
+
   // Toast function inlined to avoid import issues in static builds
   function showToast(message, type = 'info', duration = 3200) {
     if (typeof window === 'undefined') return;

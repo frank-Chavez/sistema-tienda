@@ -233,7 +233,10 @@ import { cartStore } from '../store/cart.js';
   </section>
 </Layout>
 
-<script type="module" define:vars={{ cartStore, productsStore }}>
+<script type="module">
+  import { cartStore } from '../store/cart.js';
+  import { productsStore } from '../store/products.js';
+
   document.addEventListener('DOMContentLoaded', () => {
     const grid = document.getElementById('featured-grid');
 
