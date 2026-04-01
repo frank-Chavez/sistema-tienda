@@ -9,6 +9,7 @@ Plataforma de comercio electrónico especializada en productos naturales, orgán
 ## ✨ Características Principales
 
 ### Para Clientes
+
 - 🛍️ Catálogo completo de productos naturales y orgánicos
 - 🔍 Filtrado de productos por categorías
 - 🛒 Carrito de compras con persistencia en localStorage
@@ -19,6 +20,7 @@ Plataforma de comercio electrónico especializada en productos naturales, orgán
 - ✅ Órdenes guardadas en Firestore
 
 ### Para Administradores
+
 - 📊 Dashboard administrativo protegido
 - ➕ Gestión completa de productos (crear, editar, eliminar)
 - 📂 Administración de categorías
@@ -42,12 +44,12 @@ Vea los detalles de estructura en [logs de sistema].
 
 ## 🚀 Comandos
 
-| Comando | Descripción |
-|---------|-------------|
-| `npm install` | Instala las dependencias necesarias |
-| `npm run dev` | Inicia el servidor de desarrollo local |
-| `npm run build` | Compila la aplicación para producción |
-| `npm run preview` | Previsualizá el build localmente |
+| Comando           | Descripción                            |
+| ----------------- | -------------------------------------- |
+| `npm install`     | Instala las dependencias necesarias    |
+| `npm run dev`     | Inicia el servidor de desarrollo local |
+| `npm run build`   | Compila la aplicación para producción  |
+| `npm run preview` | Previsualizá el build localmente       |
 
 ## 🔐 Autenticación y Seguridad
 
@@ -60,6 +62,7 @@ Vea los detalles de estructura en [logs de sistema].
 ## 📊 Módulos Principales
 
 ### Catálogo de Productos
+
 - Visualización de todos los productos
 - Filtrado por categorías
 - Búsqueda y ordenamiento
@@ -67,6 +70,7 @@ Vea los detalles de estructura en [logs de sistema].
 - Stock en tiempo real
 
 ### Carrito de Compras
+
 - Adición/eliminación de productos
 - Actualización de cantidades
 - Persistencia en localStorage
@@ -74,6 +78,7 @@ Vea los detalles de estructura en [logs de sistema].
 - Cálculo automático de totales
 
 ### Panel Administrativo
+
 - Acceso solo para usuarios con rol "admin"
 - Gestión de inventario
 - Seguimiento de órdenes
@@ -86,7 +91,7 @@ Vea los detalles de estructura en [logs de sistema].
 **Ubicación:** Santarrosa Señor de los milagros
 
 Mensaje de contacto predefinido:  
-*"Hola, quisiera información sobre sus consultas y productos. ¿Tienen disponibilidad?"*
+_"Hola, quisiera información sobre sus consultas y productos. ¿Tienen disponibilidad?"_
 
 ## 📝 Notas Importantes
 
@@ -112,48 +117,3 @@ Todos los derechos reservados © E.F.D. 2026
 ---
 
 **Desarrollado con ❤️ usando Astro, Firebase y Tailwind CSS**
-
-```sh
-npm create astro@latest -- --template basics
-```
-
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
-```
-
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
