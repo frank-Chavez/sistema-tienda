@@ -1,6 +1,9 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import CartItemTemplate from '../components/CartItem.astro'; // Using the slot trick to import a template
+import { cartStore } from '../store/cart.js';
+import { authStore } from '../store/auth.js';
+import { showToast } from '../lib/toast.js';
 ---
 
 <Layout title="Tu Carrito" description="Revisa los productos en tu carrito.">
@@ -133,16 +136,69 @@ import CartItemTemplate from '../components/CartItem.astro'; // Using the slot t
   <CartItemTemplate />
 </Layout>
 
-<script>
-  import { cartStore } from '../store/cart.js';
-  import { authStore } from '../store/auth.js';
-  import { showToast } from '../lib/toast.js';
+<script type="module" define:vars={{ cartStore, authStore }}>
+  // Toast function inlined to avoid import issues in static builds
+  function showToast(message, type = 'info', duration = 3200) {
+    if (typeof window === 'undefined') return;
+
+    let container = document.getElementById('global-toast-container');
+
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'global-toast-container';
+      container.style.position = 'fixed';
+      container.style.top = '1rem';
+      container.style.right = '1rem';
+      container.style.zIndex = 9999;
+      container.style.display = 'flex';
+      container.style.flexDirection = 'column';
+      container.style.gap = '0.5rem';
+      document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.style.minWidth = '240px';
+    toast.style.padding = '12px 14px';
+    toast.style.borderRadius = '10px';
+    toast.style.color = '#ffffff';
+    toast.style.boxShadow = '0 8px 22px rgba(0, 0, 0, 0.16)';
+    toast.style.fontSize = '0.9rem';
+    toast.style.fontWeight = '600';
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(20px)';
+    toast.style.transition = 'opacity 220ms ease, transform 220ms ease';
+
+    let backgroundColor = '#06b6d4';
+    if (type === 'success') backgroundColor = '#10b981';
+    if (type === 'warning') backgroundColor = '#f59e0b';
+    if (type === 'error') backgroundColor = '#ef4444';
+
+    toast.style.backgroundColor = backgroundColor;
+    toast.textContent = message;
+
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(0)';
+    });
+
+    const hide = () => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(20px)';
+      setTimeout(() => {
+        if (toast.parentElement) toast.parentElement.removeChild(toast);
+      }, 220);
+    };
+
+    setTimeout(hide, duration);
+  }
 
   document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('cart-items-container');
     const template = document.getElementById(
-      'cart-item-template',
-    ) as HTMLTemplateElement | null;
+      'cart-item-template'
+    );
     const emptyState = document.getElementById('cart-empty');
     const summary = document.getElementById('cart-summary');
 
@@ -165,10 +221,10 @@ import CartItemTemplate from '../components/CartItem.astro'; // Using the slot t
       summary.classList.remove('hidden');
       container.innerHTML = '';
 
-      items.forEach((item: any) => {
-        const clone = template.content.cloneNode(true) as HTMLElement;
+      items.forEach((item) => {
+        const clone = template.content.cloneNode(true);
 
-        const img = clone.querySelector('.item-image') as HTMLImageElement;
+        const img = clone.querySelector('.item-image');
         if (img) img.src = item.image;
         const nameNode = clone.querySelector('.item-name');
         if (nameNode) nameNode.textContent = item.name;

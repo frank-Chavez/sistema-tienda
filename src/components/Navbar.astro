@@ -1,5 +1,6 @@
 ---
-
+import { authStore } from '../store/auth.js';
+import { cartStore } from '../store/cart.js';
 ---
 
 <nav
@@ -153,10 +154,7 @@
   </div>
 </nav>
 
-<script>
-  import { authStore } from '../store/auth.js';
-  import { cartStore } from '../store/cart.js';
-
+<script type="module" define:vars={{ authStore, cartStore }}>
   // Toggle mobile menu
   const mobileBtn = document.getElementById('mobile-menu-btn');
   const mobileMenu = document.getElementById('mobile-menu');

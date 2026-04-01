@@ -326,7 +326,7 @@ import { cartStore } from '../store/cart.js';
 
       buttons.forEach((btn) => {
         btn.addEventListener('click', (e) => {
-          const button = e.currentTarget as HTMLButtonElement;
+          const button = e.currentTarget;
 
           const id = button.dataset.productId;
           const name = button.dataset.productName;
@@ -338,8 +338,8 @@ import { cartStore } from '../store/cart.js';
             cartStore.addItem({ id, name, price, image, stock }, 1);
 
             const text = button.querySelector(
-              '.btn-text',
-            ) as HTMLElement | null;
+              '.btn-text'
+            );
 
             button.classList.replace('bg-purple-600', 'bg-green-500');
 

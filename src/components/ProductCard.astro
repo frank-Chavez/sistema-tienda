@@ -14,6 +14,7 @@ interface Props {
 }
 
 const { product } = Astro.props;
+import { cartStore } from '../store/cart.js';
 
 // Valores seguros
 const id = product?.id ?? '';
@@ -93,15 +94,13 @@ const stock = Number(product?.stock ?? 0);
   </div>
 </div>
 
-<script>
-  import { cartStore } from '../store/cart.js';
-
+<script type="module" define:vars={{ cartStore }}>
   document.addEventListener('DOMContentLoaded', () => {
     const buttons = document.querySelectorAll('.add-to-cart-btn');
 
     buttons.forEach((button) => {
       button.addEventListener('click', (e) => {
-        const btn = e.currentTarget as HTMLButtonElement;
+        const btn = e.currentTarget;
 
         const id = btn.dataset.id;
         const name = btn.dataset.name;
@@ -113,7 +112,7 @@ const stock = Number(product?.stock ?? 0);
           cartStore.addItem({ id, name, price, image, stock }, 1);
         }
 
-        const textSpan = btn.querySelector('.btn-text') as HTMLElement | null;
+        const textSpan = btn.querySelector('.btn-text');
 
         btn.classList.remove('bg-purple-600');
         btn.classList.add('bg-green-500');

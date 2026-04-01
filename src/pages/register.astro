@@ -127,9 +127,9 @@ import { authStore } from '../store/auth.js';
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const nombreInput = document.getElementById('nombre') as HTMLInputElement;
-      const emailInput = document.getElementById('email-address') as HTMLInputElement;
-      const passwordInput = document.getElementById('password') as HTMLInputElement;
+      const nombreInput = document.getElementById('nombre');
+      const emailInput = document.getElementById('email-address');
+      const passwordInput = document.getElementById('password');
 
       if (!nombreInput || !emailInput || !passwordInput) return;
 

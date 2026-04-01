@@ -1,6 +1,7 @@
 ---
 // Componente de protección para rutas de admin
 // Verifica que el usuario sea admin antes de mostrar contenido
+import { authStore } from '../store/auth.js';
 ---
 
 <div id="admin-guard-container">
@@ -20,9 +21,7 @@
   <slot />
 </div>
 
-<script type="module">
-  import { authStore } from '../store/auth.js';
-
+<script type="module" define:vars={{ authStore }}>
   // 🔒 VERIFICACIÓN DE ADMIN - Se ejecuta inmediatamente
   async function protectAdminRoute() {
     const loadingGuard = document.getElementById('loading-guard');
