@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { authStore } from '../store/auth.js';
 ---
 
 <Layout title="Registro" description="Crea tu cuenta en NaturaBio.">
@@ -118,9 +119,7 @@ import Layout from '../layouts/Layout.astro';
   </div>
 </Layout>
 
-<script>
-  import { authStore } from '../store/auth.js';
-
+<script type="module" define:vars={{ authStore }}>
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('register-form');
     const errorMsg = document.getElementById('error-message');

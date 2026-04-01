@@ -1,6 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import ProductCard from '../components/ProductCard.astro';
+import { productsStore } from '../store/products.js';
+import { cartStore } from '../store/cart.js';
 
 // We mock an initial fetch for SSR, but we will mostly rely on client side hydrating,
 // using our static fallback array for SEO/Initial load where possible.
@@ -231,9 +233,7 @@ import ProductCard from '../components/ProductCard.astro';
   </section>
 </Layout>
 
-<script>
-  import { productsStore } from '../store/products.js';
-
+<script type="module" define:vars={{ cartStore, productsStore }}>
   document.addEventListener('DOMContentLoaded', () => {
     const grid = document.getElementById('featured-grid');
 
@@ -325,7 +325,7 @@ import ProductCard from '../components/ProductCard.astro';
       const buttons = document.querySelectorAll('.add-home-btn');
 
       buttons.forEach((btn) => {
-        btn.addEventListener('click', async (e) => {
+        btn.addEventListener('click', (e) => {
           const button = e.currentTarget as HTMLButtonElement;
 
           const id = button.dataset.productId;
@@ -333,9 +333,6 @@ import ProductCard from '../components/ProductCard.astro';
           const price = parseFloat(button.dataset.productPrice || '0');
           const image = button.dataset.productImage;
           const stock = parseInt(button.dataset.productStock || '0');
-
-          // @ts-ignore
-          const { cartStore } = await import('../store/cart.js');
 
           if (id && name && image) {
             cartStore.addItem({ id, name, price, image, stock }, 1);

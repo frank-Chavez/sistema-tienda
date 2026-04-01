@@ -1,5 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { productsStore } from '../store/products.js';
+import { cartStore } from '../store/cart.js';
 ---
 
 <Layout
@@ -33,9 +35,7 @@ import Layout from '../layouts/Layout.astro';
   </div>
 </Layout>
 
-<script type="module">
-  import { productsStore } from '../store/products.js';
-
+<script type="module" define:vars={{ cartStore, productsStore }}>
   document.addEventListener('DOMContentLoaded', async () => {
     const grid = document.getElementById('products-grid');
     const filter = document.getElementById('categoryFilter');
@@ -134,7 +134,7 @@ import Layout from '../layouts/Layout.astro';
       const buttons = document.querySelectorAll('.add-btn');
 
       buttons.forEach((btn) => {
-        btn.addEventListener('click', async (e) => {
+        btn.addEventListener('click', (e) => {
           const button = e.currentTarget;
 
           const id = button.dataset.productId;
@@ -142,8 +142,6 @@ import Layout from '../layouts/Layout.astro';
           const price = parseFloat(button.dataset.productPrice || '0');
           const image = button.dataset.productImage;
           const stock = parseInt(button.dataset.productStock || '0');
-
-          const { cartStore } = await import('../store/cart.js');
 
           if (id && name && image) {
             cartStore.addItem({ id, name, price, image, stock }, 1);
