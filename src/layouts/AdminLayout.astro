@@ -1,0 +1,23 @@
+---
+import Layout from './Layout.astro';
+import AdminSidebar from '../components/AdminSidebar.astro';
+import AdminGuard from '../components/AdminGuard.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'Panel de administración' } = Astro.props;
+---
+
+<Layout title={title} description={description}>
+  <AdminGuard>
+    <div class="flex bg-gray-50 min-h-screen">
+      <AdminSidebar />
+      <main class="grow p-4 md:p-8 w-full max-w-full overflow-hidden relative">
+        <slot />
+      </main>
+    </div>
+  </AdminGuard>
+</Layout>

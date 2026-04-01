@@ -1,0 +1,142 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import ConfirmModal from '../../components/ConfirmModal.astro';
+---
+
+<AdminLayout
+  title="Usuarios Registrados"
+  description="Administra los usuarios de NaturaBio"
+>
+  <div>
+    <div class="mb-8">
+      <h1 class="text-3xl font-black text-gray-900 tracking-tight">
+        Usuarios
+      </h1>
+      <p class="text-gray-500 mt-1">
+        Lista de clientes y administradores registrados en la plataforma.
+      </p>
+    </div>
+
+    <!-- Users Table -->
+    <div
+      class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden min-h-[50vh]"
+    >
+      <ConfirmModal id="confirm-modal" />
+      <div class="overflow-x-auto w-full">
+        <table class="w-full text-left border-collapse min-w-200">
+          <thead>
+            <tr
+              class="bg-gray-50 text-gray-500 text-sm border-b border-gray-100"
+            >
+              <th class="py-4 px-6 font-semibold w-20">#</th>
+              <th class="py-4 px-6 font-semibold">Nombre</th>
+              <th class="py-4 px-6 font-semibold">Correo</th>
+              <th class="py-4 px-6 font-semibold">Rol</th>
+              <th class="py-4 px-6 font-semibold text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody
+            id="users-tbody"
+            class="divide-y divide-gray-100 text-gray-700"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<script type="module">
+  import { showToast } from '/src/lib/toast.js';
+  import { getUsers, deleteUser } from '/src/lib/firebaseUsers.js';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const tbody = document.getElementById('users-tbody');
+
+    async function renderUsers() {
+      if (!tbody) return;
+
+      const users = await getUsers();
+
+      if (!users.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="p-10 text-center text-gray-500">
+              No hay usuarios
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = users
+        .map(
+          (user, index) => `
+          <tr>
+            <!-- ID bonito -->
+            <td class="p-4 font-bold">
+              ${String(index + 1).padStart(3, '0')}
+            </td>
+
+            <!-- Nombre -->
+            <td class="p-4 font-bold">
+              ${user.nombre || '-'}
+            </td>
+
+            <!-- Email -->
+            <td class="p-4">
+              ${user.email || '-'}
+            </td>
+
+        
+
+            <!-- Rol -->
+            <td class="p-4">
+              <span class="px-2 py-1 rounded bg-gray-100 text-sm">
+                ${user.rol || 'cliente'}
+              </span>
+            </td>
+
+           
+
+            <!-- Acciones -->
+            <td class="p-4 text-right">
+              <button class="delete-btn text-red-600 font-semibold" data-id="${user.id}">
+                Eliminar
+              </button>
+            </td>
+          </tr>
+        `,
+        )
+        .join('');
+
+      // 🔥 eliminar usuario
+      document.querySelectorAll('.delete-btn').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          const id = e.currentTarget.dataset.id;
+
+          // 🔥 obtener usuario completo
+          const user = users.find((u) => u.id === id);
+
+          // 🚫 bloquear admin
+          if (user?.rol === 'admin') {
+            showToast('No puedes eliminar un administrador', 'error');
+            return;
+          }
+
+          const confirmResult = await showConfirm(
+            'Eliminar usuario',
+            '¿Eliminar usuario? Esta acción es irreversible.',
+            'Sí, eliminar',
+            'Cancelar',
+          );
+          if (confirmResult) {
+            await deleteUser(id);
+            showToast('Usuario eliminado', 'success');
+            renderUsers();
+          }
+        });
+      });
+    }
+
+    renderUsers();
+  });
+</script>

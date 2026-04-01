@@ -1,0 +1,170 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="Catálogo de Productos"
+  description="Explora todos nuestros productos naturales."
+>
+  <div class="max-w-7xl mx-auto px-4 py-12">
+    <!-- HEADER -->
+    <div class="flex justify-between mb-10">
+      <h1 class="text-4xl font-black">Productos</h1>
+
+      <select id="categoryFilter" class="border p-2 rounded">
+        <option value="Todos">Todos</option>
+      </select>
+    </div>
+
+    <!-- LOADING -->
+    <div id="loading" class="text-center py-20">Cargando productos...</div>
+
+    <!-- EMPTY -->
+    <div id="empty-state" class="hidden text-center py-20">
+      No hay productos
+    </div>
+
+    <!-- GRID -->
+    <div
+      id="products-grid"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+    >
+    </div>
+  </div>
+</Layout>
+
+<script type="module">
+  import { productsStore } from '/src/store/products.js';
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const grid = document.getElementById('products-grid');
+    const filter = document.getElementById('categoryFilter');
+    const loading = document.getElementById('loading');
+    const empty = document.getElementById('empty-state');
+
+    // LOADING
+    loading.style.display = 'block';
+
+    // CARGAR PRODUCTOS
+    await productsStore.loadProducts();
+    const products = productsStore.getActiveProducts();
+
+    loading.style.display = 'none';
+
+    if (!products.length) {
+      empty.classList.remove('hidden');
+      return;
+    }
+
+    // CATEGORÍAS DINÁMICAS
+    const categories = [
+      ...new Set(products.map((p) => p.category).filter(Boolean)),
+    ];
+
+    filter.innerHTML = `
+    <option value="Todos">Todos</option>
+    ${categories.map((c) => `<option value="${c}">${c}</option>`).join('')}
+  `;
+
+    // =========================
+    // RENDER
+    // =========================
+    function renderProducts() {
+      const selected = filter.value;
+
+      const filtered =
+        selected === 'Todos'
+          ? products
+          : products.filter((p) => p.category === selected);
+
+      if (!filtered.length) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      empty.classList.add('hidden');
+
+      grid.innerHTML = filtered
+        .map(
+          (prod) => `
+      <div class="bg-white p-4 rounded shadow flex flex-col">
+
+        <div class="w-full h-40 bg-gray-100 overflow-hidden rounded-lg mb-3">
+          <img src="${prod.image}" class="w-full h-full object-contain object-center" alt="${prod.name}" />
+        </div>
+
+        <h3 class="font-bold">${prod.name}</h3>
+
+        <p class="text-sm text-gray-500">${prod.description || ''}</p>
+
+        <div class="mt-auto flex justify-between items-center">
+          <span class="font-bold text-purple-700">
+            S/ ${(Number(prod.price) || 0).toFixed(2)}
+          </span>
+
+          ${
+            prod.stock === 0
+              ? '<span class="text-red-500 font-bold">Sin stock</span>'
+              : `<button
+            data-product-id="${prod.id}"
+            data-product-name="${prod.name}"
+            data-product-price="${prod.price}"
+            data-product-image="${prod.image}"
+            data-product-stock="${prod.stock}"
+            class="add-btn bg-purple-600 text-white px-3 py-1 rounded group"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path> </svg> <span class="btn-text">Agregar</span>
+          </button>`
+          }
+
+        </div>
+      </div>
+    `,
+        )
+        .join('');
+
+      attachCartEvents();
+    }
+
+    // =========================
+    // CARRITO (IGUAL QUE INDEX)
+    // =========================
+    function attachCartEvents() {
+      const buttons = document.querySelectorAll('.add-btn');
+
+      buttons.forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          const button = e.currentTarget;
+
+          const id = button.dataset.productId;
+          const name = button.dataset.productName;
+          const price = parseFloat(button.dataset.productPrice || '0');
+          const image = button.dataset.productImage;
+          const stock = parseInt(button.dataset.productStock || '0');
+
+          const { cartStore } = await import('/src/store/cart.js');
+
+          if (id && name && image) {
+            cartStore.addItem({ id, name, price, image, stock }, 1);
+
+            const text = button.querySelector('.btn-text');
+
+            button.classList.replace('bg-purple-600', 'bg-green-500');
+            if (text) text.textContent = '✔';
+
+            setTimeout(() => {
+              button.classList.replace('bg-green-500', 'bg-purple-600');
+              if (text) text.textContent = 'Agregar';
+            }, 1200);
+          }
+        });
+      });
+    }
+
+    // EVENTOS
+    filter.addEventListener('change', renderProducts);
+
+    renderProducts();
+  });
+</script>

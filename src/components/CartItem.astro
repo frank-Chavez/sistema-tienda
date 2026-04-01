@@ -1,0 +1,85 @@
+<!-- This component is generally rendered dynamically since cart items live in local storage.
+     In Astro apps using local state without frameworks, we often make a JS renderer or 
+     a template tag. For the purpose of the requirement, making a standard component that
+     we'll populate dynamically via JS on the cart page is fine, OR we make a pure HTML template.
+     Since it's Astro, we can define a template script here. -->
+<template id="cart-item-template">
+  <div
+    class="cart-item flex flex-col sm:flex-row items-center gap-6 py-6 border-b border-gray-100 bg-white p-4 rounded-xl mb-4 shadow-sm hover:shadow-md transition-shadow"
+  >
+    <!-- Image -->
+    <div
+      class="w-full sm:w-24 h-24 shrink-0 rounded-xl overflow-hidden bg-gray-50 border border-gray-100"
+    >
+      <img src="" alt="" class="item-image w-full h-full object-cover" />
+    </div>
+
+    <!-- Info -->
+    <div class="grow flex flex-col justify-center text-center sm:text-left">
+      <h4 class="item-name text-lg font-bold text-gray-900 mb-1"></h4>
+      <p class="item-price text-purple-600 font-semibold text-lg"></p>
+    </div>
+
+    <!-- Quantity Controls -->
+    <div
+      class="flex items-center justify-center gap-3 bg-gray-50 p-2 rounded-xl border border-gray-100"
+    >
+      <button
+        class="btn-decrease w-8 h-8 rounded-lg bg-white shadow-sm border border-gray-200 text-gray-600 hover:bg-purple-50 hover:text-purple-600 transition-colors flex items-center justify-center active:scale-95"
+      >
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          ><path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M20 12H4"></path></svg
+        >
+      </button>
+      <span class="item-quantity font-medium w-8 text-center text-gray-900"
+      ></span>
+      <button
+        class="btn-increase w-8 h-8 rounded-lg bg-white shadow-sm border border-gray-200 text-gray-600 hover:bg-purple-50 hover:text-purple-600 transition-colors flex items-center justify-center active:scale-95"
+      >
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          ><path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 4v16m8-8H4"></path></svg
+        >
+      </button>
+    </div>
+
+    <!-- Total & Remove -->
+    <div
+      class="flex items-center justify-between sm:flex-col sm:items-end sm:justify-center gap-2 w-full sm:w-auto mt-4 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-t-0 border-gray-100"
+    >
+      <p class="item-subtotal font-bold text-xl text-gray-900"></p>
+      <button
+        class="btn-remove text-sm text-red-500 hover:text-red-700 font-medium flex items-center gap-1 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-50"
+      >
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          ><path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+          ></path></svg
+        >
+        Eliminar
+      </button>
+    </div>
+  </div>
+</template>

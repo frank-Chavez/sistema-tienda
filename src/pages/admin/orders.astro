@@ -1,0 +1,249 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import ConfirmModal from '../../components/ConfirmModal.astro';
+---
+
+<AdminLayout
+  title="Gestión de Pedidos"
+  description="Administra los pedidos de tus clientes"
+>
+  <div>
+    <div class="mb-8">
+      <h1 class="text-3xl font-black text-gray-900 tracking-tight">
+        Pedidos Recientes
+      </h1>
+      <p class="text-gray-500 mt-1">
+        Revisa y actualiza el estado de los pedidos generados vía WhatsApp.
+      </p>
+    </div>
+
+    <!-- Orders Table -->
+    <div
+      class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden min-h-[50vh]"
+    >
+      <div class="overflow-x-auto w-full">
+        <table class="w-full text-left border-collapse min-w-200">
+          <thead>
+            <tr
+              class="bg-gray-50 text-gray-500 text-sm border-b border-gray-100"
+            >
+              <th class="py-4 px-6 font-semibold w-24">ID</th>
+              <th class="py-4 px-6 font-semibold">Cliente</th>
+              <th class="py-4 px-6 font-semibold w-32">Fecha</th>
+              <th class="py-4 px-6 font-semibold w-24">Total</th>
+              <th class="py-4 px-6 font-semibold w-40">Estado</th>
+              <th class="py-4 px-6 font-semibold w-32 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody
+            id="orders-tbody"
+            class="divide-y divide-gray-100 align-middle text-gray-700"
+          >
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div
+      id="order-modal"
+      class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300"
+    >
+      <div
+        class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl transform scale-95 transition-transform duration-300 overflow-hidden"
+        id="order-modal-content"
+      >
+        <div
+          class="p-6 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10"
+        >
+          <h2 class="text-2xl font-black text-gray-900">
+            Detalles del Pedido
+          </h2>
+          <button
+            id="close-order-modal"
+            class="text-gray-400 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              ><path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"></path></svg
+            >
+          </button>
+        </div>
+        <div
+          class="p-6 sm:p-8 max-h-[70vh] overflow-y-auto"
+          id="order-details-body"
+        >
+          <!-- Populated by JS -->
+        </div>
+        <div class="p-6 border-t border-gray-100 flex justify-end bg-gray-50">
+          <button
+            id="print-order"
+            class="px-6 py-2 rounded-xl font-bold bg-purple-600 text-white hover:bg-purple-700 transition-all active:scale-95 flex items-center gap-2"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              ><path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+              ></path></svg
+            >
+            Imprimir Recibo
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <ConfirmModal id="delete-order-modal" />
+  </div>
+</AdminLayout>
+
+<script type="module">
+  import { showToast } from '/src/lib/toast.js';
+  import {
+    getOrders,
+    updateOrderStatus,
+    deleteOrder,
+  } from '/src/lib/firebaseOrders.js';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const tbody = document.getElementById('orders-tbody');
+
+    async function renderTable() {
+      const orders = await getOrders();
+
+      if (!orders.length) {
+        tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="py-8 text-center text-gray-500">
+            No hay pedidos
+          </td>
+        </tr>
+      `;
+        return;
+      }
+
+      tbody.innerHTML = orders
+        .map((order, index) => {
+          return `
+      <tr>
+        <td class="py-4 px-6 font-bold">
+          ${String(index + 1).padStart(3, '0')}
+        </td>
+
+        <td class="py-4 px-6">
+          <div class="font-bold">${order.clienteNombre}</div>
+          <div class="text-xs text-gray-500">${order.clienteTelefono}</div>
+        </td>
+
+        <td class="py-4 px-6 text-sm">
+          ${new Date(order.fecha.seconds * 1000).toLocaleDateString()}
+        </td>
+
+        <td class="py-4 px-6 font-bold text-purple-700">
+          S/ ${order.total || 0}
+        </td>
+
+        <td class="py-4 px-6">
+          <select data-id="${order.id}" class="status-select px-2 py-1 border rounded">
+            <option value="pendiente" ${order.estado === 'pendiente' ? 'selected' : ''}>Pendiente</option>
+            <option value="completado" ${order.estado === 'completado' ? 'selected' : ''}>Completado</option>
+            <option value="cancelado" ${order.estado === 'cancelado' ? 'selected' : ''}>Cancelado</option>
+          </select>
+        </td>
+
+        <td class="py-4 px-6 text-right space-x-2">
+          <button class="view-btn text-blue-600" data-id="${order.id}">
+            Ver
+          </button>
+
+          <button class="delete-btn text-red-600" data-id="${order.id}">
+            Eliminar
+          </button>
+        </td>
+      </tr>
+      `;
+        })
+        .join('');
+
+      // =====================
+      // CAMBIAR ESTADO
+      // =====================
+      document.querySelectorAll('.status-select').forEach((select) => {
+        select.addEventListener('change', async (e) => {
+          const id = e.target.dataset.id;
+          const estado = e.target.value;
+
+          await updateOrderStatus(id, estado);
+
+          // Si completado, restar stock
+          if (estado === 'completado') {
+            const order = orders.find((o) => o.id === id);
+            if (order && order.productos) {
+              const { updateStock } =
+                await import('/src/lib/firebaseProducts.js');
+              for (const producto of order.productos) {
+                await updateStock(producto.id, producto.cantidad);
+              }
+            }
+          }
+
+          renderTable();
+        });
+      });
+
+      // =====================
+      // ELIMINAR
+      // =====================
+      document.querySelectorAll('.delete-btn').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          const id = e.target.dataset.id;
+
+          const confirmResult = await showConfirm(
+            'Eliminar pedido',
+            '¿Eliminar pedido? Esta acción es irreversible.',
+            'Sí, eliminar',
+            'Cancelar',
+          );
+          if (confirmResult) {
+            await deleteOrder(id);
+            showToast('Pedido eliminado', 'success');
+            renderTable();
+          }
+        });
+      });
+
+      // =====================
+      // VER DETALLE
+      // =====================
+      document.querySelectorAll('.view-btn').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          const id = e.target.dataset.id;
+          const order = orders.find((o) => o.id === id);
+
+          if (!order) return;
+
+          showToast(
+            `Cliente: ${order.clienteNombre} · Teléfono: ${order.clienteTelefono} · Dirección: ${order.direccion} · Total: S/ ${order.total} · Productos: ${order.productos.join(', ')}`,
+            'info',
+            6000,
+          );
+        });
+      });
+    }
+
+    renderTable();
+  });
+</script>

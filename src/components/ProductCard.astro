@@ -1,0 +1,132 @@
+---
+interface Product {
+  id?: string;
+  name?: string;
+  price?: number;
+  description?: string;
+  image?: string;
+  category?: string;
+  stock?: number;
+}
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props;
+
+// Valores seguros
+const id = product?.id ?? '';
+const name = product?.name ?? 'Producto';
+const price = Number(product?.price ?? 0);
+const description = product?.description ?? '';
+const image = product?.image ?? '/placeholder.png';
+const category = product?.category ?? 'General';
+const stock = Number(product?.stock ?? 0);
+---
+
+<div
+  class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col h-full group"
+>
+  <!-- Imagen -->
+  <div class="relative h-64 overflow-hidden bg-gray-100">
+    <img
+      src={image}
+      alt={name}
+      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+      loading="lazy"
+    />
+
+    <div
+      class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-purple-700 shadow-sm border border-purple-100"
+    >
+      {category}
+    </div>
+  </div>
+
+  <!-- Contenido -->
+  <div class="p-6 flex flex-col grow">
+    <div class="flex justify-between items-start mb-2 gap-4">
+      <h3
+        class="text-xl font-bold text-gray-900 leading-tight group-hover:text-purple-600 transition-colors line-clamp-2"
+      >
+        {name}
+      </h3>
+
+      <span
+        class="text-xl font-black text-purple-700 bg-purple-50 px-3 py-1 rounded-xl shrink-0"
+      >
+        S/ {price.toFixed(2)}
+      </span>
+    </div>
+
+    <p class="text-gray-500 text-sm mb-6 line-clamp-3 leading-relaxed grow">
+      {description}
+    </p>
+
+    <!-- Botón -->
+    <div class="mt-auto">
+      <button
+        data-id={id}
+        data-name={name}
+        data-price={price}
+        data-image={image}
+        data-stock={stock}
+        class="add-to-cart-btn w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-purple-200 active:scale-[0.98]"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+          ></path>
+        </svg><span class="btn-text">Agregar al carrito</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { cartStore } from '../store/cart.js';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const buttons = document.querySelectorAll('.add-to-cart-btn');
+
+    buttons.forEach((button) => {
+      button.addEventListener('click', (e) => {
+        const btn = e.currentTarget as HTMLButtonElement;
+
+        const id = btn.dataset.id;
+        const name = btn.dataset.name;
+        const price = parseFloat(btn.dataset.price || '0');
+        const image = btn.dataset.image;
+        const stock = parseInt(btn.dataset.stock || '0');
+
+        if (id && name) {
+          cartStore.addItem({ id, name, price, image, stock }, 1);
+        }
+
+        const textSpan = btn.querySelector('.btn-text') as HTMLElement | null;
+
+        btn.classList.remove('bg-purple-600');
+        btn.classList.add('bg-green-500');
+
+        if (textSpan) textSpan.textContent = '¡Agregado!';
+
+        setTimeout(() => {
+          btn.classList.remove('bg-green-500');
+          btn.classList.add('bg-purple-600');
+
+          if (textSpan) textSpan.textContent = 'Agregar al carrito';
+        }, 2000);
+      });
+    });
+  });
+</script>

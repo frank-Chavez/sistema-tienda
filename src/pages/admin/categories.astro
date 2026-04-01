@@ -1,0 +1,168 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import ConfirmModal from '../../components/ConfirmModal.astro';
+---
+
+<AdminLayout
+  title="Gestión de Categorías"
+  description="Administra las categorías de productos"
+>
+  <div
+    class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+  >
+    <div>
+      <h1 class="text-3xl font-black text-gray-900 tracking-tight">
+        Categorías
+      </h1>
+      <p class="text-gray-500 mt-1">
+        Gestiona las categorías disponibles para tus productos.
+      </p>
+    </div>
+    <button
+      id="btn-add-category"
+      class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-5 rounded-xl transition-colors shadow-sm shadow-purple-200 flex items-center gap-2"
+    >
+      Nueva Categoría
+    </button>
+  </div>
+
+  <div
+    class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden min-h-[50vh] max-w-3xl"
+  >
+    <ul id="categories-list" class="divide-y divide-gray-100">
+      <!-- Populated by JS -->
+    </ul>
+  </div>
+
+  <div
+    id="category-modal"
+    class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4"
+  >
+    <div
+      class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6"
+      id="cat-modal-content"
+    >
+      <h2 class="text-xl font-bold mb-4">Nueva Categoría</h2>
+      <form id="category-form" class="space-y-4">
+        <input
+          type="text"
+          id="cat-name"
+          required
+          class="w-full px-4 py-3 border rounded-xl"
+          placeholder="Nombre..."
+        />
+        <div class="flex justify-end gap-3 pt-4">
+          <button type="button" id="btn-cancel-cat" class="px-5 py-2"
+            >Cancelar</button
+          >
+          <button
+            type="submit"
+            class="px-5 py-2 bg-purple-600 text-white rounded-xl"
+            >Guardar</button
+          >
+        </div>
+      </form>
+    </div>
+  </div>
+  <ConfirmModal id="delete-cat-modal" />
+</AdminLayout>
+
+<script type="module">
+  import { showToast } from '/src/lib/toast.js';
+  import { authStore } from '/src/store/auth.js';
+  import {
+    getCategories,
+    createCategory,
+    deleteCategory,
+  } from '/src/lib/firebaseCategories.js';
+
+  if (!authStore.isAdmin()) {
+    window.location.replace('/login');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const list = document.getElementById('categories-list');
+    const modal = document.getElementById('category-modal');
+    const form = document.getElementById('category-form');
+    const catName = document.getElementById('cat-name');
+
+    // ==========================
+    // RENDER CATEGORÍAS 🔥
+    // ==========================
+    async function render() {
+      const cats = await getCategories();
+
+      if (!list) return;
+
+      list.innerHTML = cats.length
+        ? cats
+            .map(
+              (cat) => `
+          <li class="p-4 flex items-center justify-between border-b">
+            <span class="font-bold">${cat.nombre}</span>
+            <button data-id="${cat.id}" class="del-btn text-red-500">
+              Eliminar
+            </button>
+          </li>
+        `,
+            )
+            .join('')
+        : '<li class="p-8 text-center text-gray-500">Sin categorías.</li>';
+
+      // eliminar
+      list.querySelectorAll('.del-btn').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          const id = e.currentTarget.dataset.id;
+
+          if (!id) return;
+
+          const confirmResult = await showConfirm(
+            'Eliminar categoría',
+            '¿Eliminar categoría? Esta acción es irreversible.',
+            'Sí, eliminar',
+            'Cancelar',
+          );
+          if (confirmResult) {
+            await deleteCategory(id);
+            showToast('Categoría eliminada', 'success');
+            render();
+          }
+        });
+      });
+    }
+
+    // ==========================
+    // MODAL
+    // ==========================
+    document
+      .getElementById('btn-add-category')
+      ?.addEventListener('click', () => modal?.classList.remove('hidden'));
+
+    document
+      .getElementById('btn-cancel-cat')
+      ?.addEventListener('click', () => modal?.classList.add('hidden'));
+
+    // ==========================
+    // CREAR CATEGORÍA
+    // ==========================
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const nombre = catName.value.trim();
+
+      if (!nombre) return;
+
+      await createCategory({ nombre });
+
+      modal?.classList.add('hidden');
+      form.reset();
+
+      render();
+    });
+
+    // ==========================
+    // INIT
+    // ==========================
+    render();
+  });
+</script>
