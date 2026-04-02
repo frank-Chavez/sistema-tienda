@@ -116,8 +116,12 @@ import { updateStock } from '../../lib/firebaseProducts.js';
 </AdminLayout>
 
 <script type="module">
-  import { getOrders, updateOrderStatus, deleteOrder } from '/src/lib/firebaseOrders.js';
-  import { updateStock } from '/src/lib/firebaseProducts.js';
+  import {
+    getOrders,
+    updateOrderStatus,
+    deleteOrder,
+  } from '@/lib/firebaseOrders.js';
+  import { updateStock } from '@/lib/firebaseProducts.js';
 
   // Toast function inlined to avoid import issues in static builds
   function showToast(message, type = 'info', duration = 3200) {
