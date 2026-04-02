@@ -234,8 +234,8 @@ import { cartStore } from '../store/cart.js';
 </Layout>
 
 <script type="module">
-  import { cartStore } from '/store/cart.js';
-  import { productsStore } from '/store/products.js';
+  import { cartStore } from '../store/cart.js';
+  import { productsStore } from '../store/products.js';
 
   document.addEventListener('DOMContentLoaded', () => {
     const grid = document.getElementById('featured-grid');
@@ -340,9 +340,7 @@ import { cartStore } from '../store/cart.js';
           if (id && name && image) {
             cartStore.addItem({ id, name, price, image, stock }, 1);
 
-            const text = button.querySelector(
-              '.btn-text'
-            );
+            const text = button.querySelector('.btn-text');
 
             button.classList.replace('bg-purple-600', 'bg-green-500');
 

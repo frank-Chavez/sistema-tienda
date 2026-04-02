@@ -240,14 +240,14 @@ import {
 </Layout>
 
 <script type="module">
-  import { authStore } from '/src/store/auth.js';
-  import { getCategories } from '/src/lib/firebaseCategories.js';
+  import { authStore } from '../src/store/auth.js';
+  import { getCategories } from '../src/lib/firebaseCategories.js';
   import {
     getProducts,
     createProduct,
     deleteProduct,
     updateProduct,
-  } from '/src/lib/firebaseProducts.js';
+  } from '../src/lib/firebaseProducts.js';
 
   // Toast function inlined to avoid import issues in static builds
   function showToast(message, type = 'info', duration = 3200) {
