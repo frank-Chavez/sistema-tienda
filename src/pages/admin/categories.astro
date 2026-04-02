@@ -75,8 +75,8 @@ import {
 </AdminLayout>
 
 <script type="module">
-  import { authStore } from '../../store/auth.js';
-  import { getCategories, createCategory, deleteCategory } from '../../lib/firebaseCategories.js';
+  import { authStore } from '/src/store/auth.js';
+  import { getCategories, createCategory, deleteCategory } from '/src/lib/firebaseCategories.js';
 
   // Toast function inlined to avoid import issues in static builds
   function showToast(message, type = 'info', duration = 3200) {
