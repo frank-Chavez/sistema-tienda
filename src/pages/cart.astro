@@ -276,8 +276,9 @@ import { showToast } from '../lib/toast.js';
         if (user) {
           nombreCliente = user.nombre || 'Cliente';
         } else {
-          nombreCliente = prompt('Ingresa tu nombre para el pedido:') || '';
-          if (!nombreCliente) return;
+          // Si no hay usuario, redirigir al login
+          window.location.href = '/login?redirect=/cart';
+          return;
         }
 
         const userName = nombreCliente;

@@ -78,22 +78,66 @@ import { authStore } from '../store/auth.js';
               placeholder="tu@correo.com"
             />
           </div>
-          <div>
+          <div class="relative">
             <label
               for="password"
               class="block text-sm font-semibold text-gray-700 mb-1"
               >Contraseña</label
             >
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autocomplete="new-password"
-              required
-              minlength="6"
-              class="appearance-none relative block w-full px-4 py-3 border border-gray-200 bg-gray-50 placeholder-gray-400 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent focus:bg-white transition-all sm:text-sm"
-              placeholder="Mínimo 6 caracteres"
-            />
+            <div class="relative">
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="new-password"
+                required
+                minlength="6"
+                class="appearance-none relative block w-full px-4 py-3 pr-12 border border-gray-200 bg-gray-50 placeholder-gray-400 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent focus:bg-white transition-all sm:text-sm"
+                placeholder="Mínimo 6 caracteres"
+              />
+              <button
+                type="button"
+                id="toggle-password"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-purple-600 focus:outline-none transition-colors p-1"
+                aria-label="Mostrar/Ocultar contraseña"
+              >
+                <svg
+                  id="eye-open"
+                  class="w-5 h-5 transition-transform"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                  ></path>
+                </svg>
+                <svg
+                  id="eye-closed"
+                  class="w-5 h-5 hidden transition-transform"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.04m4.577-2.708A9.965 9.965 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21m-6.336-6.336l-1.04-1.04m1.04 1.04A3 3 0 1112 12.122"
+                  ></path>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -125,6 +169,24 @@ import { authStore } from '../store/auth.js';
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('register-form');
     const errorMsg = document.getElementById('error-message');
+    const passwordInput = document.getElementById('password') as HTMLInputElement;
+    const togglePasswordBtn = document.getElementById('toggle-password');
+    const eyeOpenIcon = document.getElementById('eye-open');
+    const eyeClosedIcon = document.getElementById('eye-closed');
+
+    // 👀 TOGGLE PASSWORD
+    togglePasswordBtn?.addEventListener('click', () => {
+      const isPassword = passwordInput.type === 'password';
+      passwordInput.type = isPassword ? 'text' : 'password';
+
+      if (isPassword) {
+        eyeOpenIcon?.classList.add('hidden');
+        eyeClosedIcon?.classList.remove('hidden');
+      } else {
+        eyeOpenIcon?.classList.remove('hidden');
+        eyeClosedIcon?.classList.add('hidden');
+      }
+    });
 
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
