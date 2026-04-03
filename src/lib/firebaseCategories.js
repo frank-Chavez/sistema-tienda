@@ -1,4 +1,4 @@
-import { db } from './firebase'; // tu config
+import { db } from './firebase.js';
 import {
   collection,
   getDocs,
@@ -7,28 +7,24 @@ import {
   doc,
 } from 'firebase/firestore';
 
-// ==========================
-// OBTENER CATEGORÍAS
-// ==========================
 export async function getCategories() {
-  const snapshot = await getDocs(collection(db, 'categorias'));
+  try {
+    const snapshot = await getDocs(collection(db, 'categorias'));
 
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  }));
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  } catch (error) {
+    console.error('Error obteniendo categorías:', error);
+    return [];
+  }
 }
 
-// ==========================
-// CREAR CATEGORÍA
-// ==========================
 export async function createCategory(category) {
   await addDoc(collection(db, 'categorias'), category);
 }
 
-// ==========================
-// ELIMINAR CATEGORÍA
-// ==========================
 export async function deleteCategory(id) {
   await deleteDoc(doc(db, 'categorias', id));
 }

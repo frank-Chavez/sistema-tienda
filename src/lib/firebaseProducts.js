@@ -13,12 +13,17 @@ import { db } from './firebase.js';
 const productsCollection = collection(db, 'productos');
 
 export async function getProducts() {
-  const snapshot = await getDocs(productsCollection);
+  try {
+    const snapshot = await getDocs(productsCollection);
 
-  return snapshot.docs.map((d) => ({
-    id: d.id,
-    ...d.data(),
-  }));
+    return snapshot.docs.map((d) => ({
+      id: d.id,
+      ...d.data(),
+    }));
+  } catch (error) {
+    console.error('Error obteniendo productos:', error);
+    return [];
+  }
 }
 
 export async function createProduct(product) {
@@ -41,6 +46,7 @@ export async function updateStock(productId, quantity) {
     const currentStock = productSnap.data().stock || 0;
     const newStock = Math.max(0, currentStock - quantity);
     const estado = newStock === 0 ? 'inactivo' : 'activo';
+
     await updateDoc(productRef, { stock: newStock, estado });
   }
 }

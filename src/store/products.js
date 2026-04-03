@@ -1,16 +1,23 @@
-import { getProducts } from '../lib/products';
+import { getProducts } from '../lib/products.js';
 
 class ProductsStore extends EventTarget {
   products = [];
 
   async loadProducts() {
-    this.products = await getProducts();
+    try {
+      this.products = await getProducts();
 
-    window.dispatchEvent(
-      new CustomEvent('products_change', {
-        detail: this.products,
-      }),
-    );
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('products_change', {
+            detail: this.products,
+          }),
+        );
+      }
+    } catch (error) {
+      console.error('Error cargando productos:', error);
+      this.products = [];
+    }
   }
 
   getActiveProducts() {

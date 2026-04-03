@@ -14,7 +14,5 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 export const db = getFirestore(app);
-
-// 🔥 AGREGAR ESTO
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();

@@ -48,7 +48,6 @@ class AuthStore extends EventTarget {
     }
   }
 
-  // 🔥 REGISTRO
   async register(nombre, email, password) {
     try {
       const result = await createUserWithEmailAndPassword(
@@ -72,14 +71,10 @@ class AuthStore extends EventTarget {
       return { success: true };
     } catch (error) {
       console.error(error);
-      return {
-        success: false,
-        message: 'Error al registrar usuario',
-      };
+      return { success: false, message: error.message };
     }
   }
 
-  // 🔥 LOGIN
   async login(email, password) {
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
@@ -92,7 +87,6 @@ class AuthStore extends EventTarget {
       if (docSnap.exists()) {
         userData = docSnap.data();
       } else {
-        // 🔥 CREAR USUARIO SI NO EXISTE
         userData = {
           nombre: result.user.email.split('@')[0],
           email: result.user.email,
@@ -102,10 +96,9 @@ class AuthStore extends EventTarget {
         await setDoc(docRef, userData);
       }
 
-      // 🔥 ASIGNAR ROL ADMIN SI ES EL EMAIL DEL ADMIN
       if (email === 'admin@tienda.com') {
         userData.rol = 'admin';
-        await setDoc(docRef, userData); // Actualizar en DB
+        await setDoc(docRef, userData);
       }
 
       const user = {
@@ -121,14 +114,10 @@ class AuthStore extends EventTarget {
       return { success: true };
     } catch (error) {
       console.error(error);
-      return {
-        success: false,
-        message: 'Correo o contraseña incorrectos',
-      };
+      return { success: false, message: 'Correo o contraseña incorrectos' };
     }
   }
 
-  // 🔥 GOOGLE LOGIN
   async loginWithGoogle() {
     try {
       const result = await signInWithPopup(auth, googleProvider);
@@ -163,7 +152,7 @@ class AuthStore extends EventTarget {
 
       return { success: true };
     } catch (error) {
-      console.error('ERROR GOOGLE:', error);
+      console.error(error);
       return { success: false };
     }
   }

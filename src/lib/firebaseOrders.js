@@ -18,6 +18,7 @@ export async function createOrder(orderData) {
       fecha: Timestamp.now(),
       estado: 'pendiente',
     };
+
     const docRef = await addDoc(ordersRef, order);
     return { success: true, id: docRef.id };
   } catch (error) {
@@ -27,20 +28,23 @@ export async function createOrder(orderData) {
 }
 
 export async function getOrders() {
-  const snapshot = await getDocs(ordersRef);
+  try {
+    const snapshot = await getDocs(ordersRef);
 
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  }));
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  } catch (error) {
+    console.error('Error obteniendo pedidos:', error);
+    return [];
+  }
 }
 
 export async function updateOrderStatus(id, estado) {
-  const ref = doc(db, 'pedidos', id);
-  await updateDoc(ref, { estado });
+  await updateDoc(doc(db, 'pedidos', id), { estado });
 }
 
 export async function deleteOrder(id) {
-  const ref = doc(db, 'pedidos', id);
-  await deleteDoc(ref);
+  await deleteDoc(doc(db, 'pedidos', id));
 }

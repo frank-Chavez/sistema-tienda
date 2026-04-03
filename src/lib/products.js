@@ -1,25 +1,26 @@
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from './firebase';
+import { db } from './firebase.js';
 
 export async function getProducts() {
-  const querySnapshot = await getDocs(collection(db, 'productos'));
+  try {
+    const querySnapshot = await getDocs(collection(db, 'productos'));
 
-  const products = [];
+    return querySnapshot.docs.map((doc) => {
+      const data = doc.data();
 
-  querySnapshot.forEach((doc) => {
-    const data = doc.data();
-
-    products.push({
-      id: doc.id,
-      name: data.nombre || '',
-      description: data.descripcion || '',
-      price: Number(data.precio) || 0,
-      image: data.imagen || '',
-      category: data.categoria || 'General',
-      stock: Number(data.stock) || 0,
-      estado: data.estado || 'activo',
+      return {
+        id: doc.id,
+        name: data.nombre || '',
+        description: data.descripcion || '',
+        price: Number(data.precio) || 0,
+        image: data.imagen || '',
+        category: data.categoria || 'General',
+        stock: Number(data.stock) || 0,
+        estado: data.estado || 'activo',
+      };
     });
-  });
-
-  return products;
+  } catch (error) {
+    console.error('Error obteniendo productos:', error);
+    return [];
+  }
 }
