@@ -43,8 +43,8 @@ import { getUsers, deleteUser } from '../../lib/firebaseUsers.js';
   </div>
 </AdminLayout>
 
-<script type="module">
-  import { getUsers, deleteUser } from '../lib/firebaseUsers.js';
+<script>
+  import { getUsers, deleteUser } from '../../lib/firebaseUsers.js';
 
   // Toast function inlined to avoid import issues in static builds
   function showToast(message, type = 'info', duration = 3200) {

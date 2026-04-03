@@ -21,8 +21,8 @@ import {
     <AdminSidebar />
 
     <main class="grow p-4 md:p-8 w-full max-w-full overflow-hidden relative">
-      <script type="module">
-        import { authStore } from '/src/store/auth.js';
+      <script>
+        import { authStore } from '../../store/auth.js';
 
         if (!authStore.isAdmin()) {
           window.location.href = '/login';
@@ -239,15 +239,15 @@ import {
   </div>
 </Layout>
 
-<script type="module">
-  import { authStore } from '../src/store/auth.js';
-  import { getCategories } from '../src/lib/firebaseCategories.js';
+<script>
+  import { authStore } from '../../store/auth.js';
+  import { getCategories } from '../../lib/firebaseCategories.js';
   import {
     getProducts,
     createProduct,
     deleteProduct,
     updateProduct,
-  } from '../src/lib/firebaseProducts.js';
+  } from '../../lib/firebaseProducts.js';
 
   // Toast function inlined to avoid import issues in static builds
   function showToast(message, type = 'info', duration = 3200) {
