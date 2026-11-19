@@ -38,15 +38,16 @@ export async function updateProduct(id, data) {
   await updateDoc(doc(db, 'productos', id), data);
 }
 
-export async function updateStock(productId, quantity) {
+/** Suma (o resta, con número negativo) unidades al stock de un producto. */
+export async function adjustStock(productId, delta) {
   const productRef = doc(db, 'productos', productId);
   const productSnap = await getDoc(productRef);
+  if (!productSnap.exists()) return;
 
-  if (productSnap.exists()) {
-    const currentStock = productSnap.data().stock || 0;
-    const newStock = Math.max(0, currentStock - quantity);
-    const estado = newStock === 0 ? 'inactivo' : 'activo';
-
-    await updateDoc(productRef, { stock: newStock, estado });
-  }
+  const currentStock = Number(productSnap.data().stock) || 0;
+  const newStock = Math.max(0, currentStock + delta);
+  const update = { stock: newStock };
+  if (newStock === 0) update.estado = 'inactivo';
+  else if (currentStock === 0 && delta > 0) update.estado = 'activo';
+  await updateDoc(productRef, update);
 }

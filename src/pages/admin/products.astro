@@ -1,511 +1,262 @@
 ---
-import Layout from '../../layouts/Layout.astro';
-import AdminSidebar from '../../components/AdminSidebar.astro';
-import ConfirmModal from '../../components/ConfirmModal.astro';
-import { authStore } from '../../store/auth.js';
-import { showToast } from '../../lib/toast.js';
-import { getCategories } from '../../lib/firebaseCategories.js';
-import {
-  getProducts,
-  createProduct,
-  deleteProduct,
-  updateProduct,
-} from '../../lib/firebaseProducts.js';
+import AdminLayout from '../../layouts/AdminLayout.astro';
 ---
 
-<Layout
-  title="Gestión de Productos"
-  description="Administra tu catálogo de productos"
->
-  <div class="flex bg-gray-50 min-h-screen">
-    <AdminSidebar />
+<AdminLayout title="Productos">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <h1 class="text-3xl font-bold sm:text-4xl">Productos</h1>
+      <p id="products-count" class="mt-1 text-gris">&nbsp;</p>
+    </div>
+    <button id="btn-add" type="button" class="btn btn-primary">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+      Nuevo producto
+    </button>
+  </div>
 
-    <main class="grow p-4 md:p-8 w-full max-w-full overflow-hidden relative">
-      <script>
-        import { authStore } from '../../store/auth.js';
+  <label class="relative mt-6 block sm:max-w-sm">
+    <span class="sr-only">Buscar producto</span>
+    <input id="search" type="search" class="field rounded-full" placeholder="Buscar por nombre o categoría" />
+  </label>
 
-        if (!authStore.isAdmin()) {
-          window.location.href = '/login';
-        }
-      </script>
+  <ul id="products-list" class="mt-5 grid gap-3 xl:grid-cols-2">
+    <li class="skeleton h-24"></li>
+    <li class="skeleton h-24"></li>
+  </ul>
 
-      <div
-        class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-      >
-        <div>
-          <h1 class="text-3xl font-black text-gray-900 tracking-tight">
-            Menú de Productos
-          </h1>
-          <p class="text-gray-500 mt-1">
-            Añade, edita y elimina productos de tu tienda.
-          </p>
-        </div>
-        <button
-          id="btn-add-product"
-          class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-5 rounded-xl transition-colors shadow-sm shadow-purple-200 flex items-center gap-2"
-        >
-          <svg
-            class="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            ><path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 4v16m8-8H4"></path></svg
-          >
-          Nuevo Producto
+  <div id="product-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-sheet modal-wide">
+      <div class="sticky top-0 z-10 flex items-center justify-between border-b border-borde bg-white p-5 sm:p-6">
+        <h2 id="modal-title" class="text-2xl font-bold">Nuevo producto</h2>
+        <button type="button" data-close aria-label="Cerrar" class="flex h-10 w-10 items-center justify-center rounded-full hover:bg-lavanda">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg>
         </button>
       </div>
 
-      <!-- Products Table -->
-      <div
-        class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden min-h-[50vh]"
-      >
-        <div class="overflow-x-auto w-full">
-          <table class="w-full text-left border-collapse min-w-200">
-            <thead>
-              <tr
-                class="bg-gray-50 text-gray-500 text-sm border-b border-gray-100"
-              >
-                <th class="py-4 px-6 font-semibold w-16">Imagen</th>
-                <th class="py-4 px-6 font-semibold">Producto</th>
-                <th class="py-4 px-6 font-semibold w-24">Precio</th>
-                <th class="py-4 px-6 font-semibold w-24">Stock</th>
-                <th class="py-4 px-6 font-semibold w-32">Estado</th>
-                <th class="py-4 px-6 font-semibold w-32 text-right">Acciones</th
-                >
-              </tr>
-            </thead>
-            <tbody
-              id="products-tbody"
-              class="divide-y divide-gray-100 align-middle text-gray-700"
-            >
-              <!-- Populated by JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Modal Overlay (Hidden by default) -->
-      <div
-        id="product-modal"
-        class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300"
-      >
-        <div
-          class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform scale-95 transition-transform duration-300"
-          id="modal-content"
-        >
-          <div
-            class="p-6 sm:p-8 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10"
-          >
-            <h2 id="modal-title" class="text-2xl font-black text-gray-900">
-              Agregar Producto
-            </h2>
-            <button
-              id="btn-close-modal"
-              class="text-gray-400 hover:text-gray-700 transition-colors p-2 rounded-full hover:bg-gray-100"
-            >
-              <svg
-                class="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                ><path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"></path></svg
-              >
-            </button>
+      <form id="product-form" class="space-y-5 p-5 sm:p-6">
+        <input type="hidden" id="form-id" />
+        <div class="flex gap-4">
+          <div class="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-lavanda">
+            <img id="form-preview" alt="" class="hidden h-full w-full object-contain p-1 mix-blend-multiply" />
           </div>
-
-          <form id="product-form" class="p-6 sm:p-8 space-y-6">
-            <input type="hidden" id="form-id" />
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div class="sm:col-span-2">
-                <label class="block text-sm font-semibold text-gray-700 mb-2"
-                  >Nombre del Producto</label
-                >
-                <input
-                  type="text"
-                  id="form-name"
-                  required
-                  class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all outline-none bg-gray-50 focus:bg-white"
-                  placeholder="Ej. Aloe Vera Orgánico"
-                />
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2"
-                  >Precio (S/)</label
-                >
-                <input
-                  type="number"
-                  step="0.01"
-                  id="form-price"
-                  required
-                  class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all outline-none bg-gray-50 focus:bg-white"
-                  placeholder="0.00"
-                />
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2"
-                  >Stock (unidades)</label
-                >
-                <input
-                  type="number"
-                  id="form-stock"
-                  required
-                  class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all outline-none bg-gray-50 focus:bg-white"
-                  placeholder="10"
-                />
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2"
-                  >Categoría</label
-                >
-                <select
-                  id="form-category"
-                  required
-                  class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all outline-none bg-gray-50 focus:bg-white text-gray-700"
-                >
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2"
-                  >Estado</label
-                >
-                <select
-                  id="form-status"
-                  required
-                  class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all outline-none bg-gray-50 focus:bg-white text-gray-700"
-                >
-                  <option value="activo">Activo</option>
-                  <option value="inactivo">Inactivo</option>
-                </select>
-              </div>
-
-              <div class="sm:col-span-2">
-                <label class="block text-sm font-semibold text-gray-700 mb-2"
-                  >URL de la Imagen</label
-                >
-                <input
-                  type="url"
-                  id="form-image"
-                  required
-                  class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all outline-none bg-gray-50 focus:bg-white"
-                  placeholder="https://..."
-                />
-              </div>
-
-              <div class="sm:col-span-2">
-                <label class="block text-sm font-semibold text-gray-700 mb-2"
-                  >Descripción</label
-                >
-                <textarea
-                  id="form-description"
-                  required
-                  rows="4"
-                  class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all outline-none bg-gray-50 focus:bg-white resize-none"
-                  placeholder="Breve descripción del producto..."></textarea>
-              </div>
-            </div>
-
-            <div class="pt-6 border-t border-gray-100 flex justify-end gap-3">
-              <button
-                type="button"
-                id="btn-cancel-modal"
-                class="px-6 py-2.5 rounded-xl font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
-                >Cancelar</button
-              >
-              <button
-                type="submit"
-                class="px-6 py-2.5 rounded-xl font-bold bg-purple-600 text-white hover:bg-purple-700 hover:shadow-lg hover:shadow-purple-200 transition-all active:scale-[0.98]"
-                >Guardar Producto</button
-              >
-            </div>
-          </form>
+          <div class="grow">
+            <label for="form-image" class="label">Enlace de la imagen</label>
+            <input type="url" id="form-image" required class="field" placeholder="https://…" />
+          </div>
         </div>
-      </div>
-
-      <ConfirmModal id="delete-product-modal" />
-    </main>
+        <div>
+          <label for="form-name" class="label">Nombre</label>
+          <input type="text" id="form-name" required maxlength="80" class="field" placeholder="Ej. Aloe vera orgánico" />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="form-price" class="label">Precio (S/)</label>
+            <input type="number" inputmode="decimal" step="0.01" min="0" id="form-price" required class="field" placeholder="0.00" />
+          </div>
+          <div>
+            <label for="form-stock" class="label">Stock</label>
+            <input type="number" inputmode="numeric" step="1" min="0" id="form-stock" required class="field" placeholder="10" />
+          </div>
+          <div>
+            <label for="form-category" class="label">Categoría</label>
+            <select id="form-category" required class="field"></select>
+          </div>
+          <div>
+            <label for="form-status" class="label">Estado</label>
+            <select id="form-status" class="field">
+              <option value="activo">Visible en tienda</option>
+              <option value="inactivo">Oculto</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label for="form-description" class="label">Descripción</label>
+          <textarea id="form-description" required rows="4" class="field resize-none" placeholder="Para qué sirve, presentación, modo de uso…"></textarea>
+        </div>
+        <div class="flex flex-col-reverse gap-3 border-t border-borde pt-5 sm:flex-row sm:justify-end">
+          <button type="button" data-close class="btn btn-outline">Cancelar</button>
+          <button id="form-submit" type="submit" class="btn btn-primary">Guardar producto</button>
+        </div>
+      </form>
+    </div>
   </div>
-</Layout>
+</AdminLayout>
 
 <script>
-  import { authStore } from '../../store/auth.js';
+  import { requireAdmin } from '../../lib/adminGuard.js';
   import { getCategories } from '../../lib/firebaseCategories.js';
-  import {
-    getProducts,
-    createProduct,
-    deleteProduct,
-    updateProduct,
-  } from '../../lib/firebaseProducts.js';
+  import { getProducts, createProduct, deleteProduct, updateProduct } from '../../lib/firebaseProducts.js';
+  import { showToast } from '../../lib/toast.js';
+  import { openModal, closeModal, wireModal } from '../../lib/modal.js';
+  import { escapeHtml, formatPrice } from '../../lib/utils.js';
 
-  // Toast function inlined to avoid import issues in static builds
-  function showToast(message, type = 'info', duration = 3200) {
-    if (typeof window === 'undefined') return;
+  const $ = <T extends HTMLElement = HTMLInputElement>(id: string) => document.getElementById(id) as T;
+  const list = $<HTMLElement>('products-list');
+  const modal = $<HTMLElement>('product-modal');
+  const form = $<HTMLFormElement>('product-form');
+  const preview = $<HTMLImageElement>('form-preview');
+  const submitBtn = $<HTMLButtonElement>('form-submit');
+  const search = $('search');
+  wireModal(modal);
 
-    let container = document.getElementById('global-toast-container');
+  let products: any[] = [];
+  let categories: any[] = [];
 
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'global-toast-container';
-      container.style.position = 'fixed';
-      container.style.top = '1rem';
-      container.style.right = '1rem';
-      container.style.zIndex = 9999;
-      container.style.display = 'flex';
-      container.style.flexDirection = 'column';
-      container.style.gap = '0.5rem';
-      document.body.appendChild(container);
-    }
+  function render() {
+    const q = search.value.trim().toLowerCase();
+    const visible = products.filter(
+      (p) => !q || `${p.nombre} ${p.categoria}`.toLowerCase().includes(q),
+    );
+    $<HTMLElement>('products-count').textContent = `${products.length} productos registrados`;
 
-    const toast = document.createElement('div');
-    toast.style.minWidth = '240px';
-    toast.style.padding = '12px 14px';
-    toast.style.borderRadius = '10px';
-    toast.style.color = '#ffffff';
-    toast.style.boxShadow = '0 8px 22px rgba(0, 0, 0, 0.16)';
-    toast.style.fontSize = '0.9rem';
-    toast.style.fontWeight = '600';
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(20px)';
-    toast.style.transition = 'opacity 220ms ease, transform 220ms ease';
-
-    let backgroundColor = '#06b6d4';
-    if (type === 'success') backgroundColor = '#10b981';
-    if (type === 'warning') backgroundColor = '#f59e0b';
-    if (type === 'error') backgroundColor = '#ef4444';
-
-    toast.style.backgroundColor = backgroundColor;
-    toast.textContent = message;
-
-    container.appendChild(toast);
-
-    requestAnimationFrame(() => {
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateX(0)';
-    });
-
-    const hide = () => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateX(20px)';
-      setTimeout(() => {
-        if (toast.parentElement) toast.parentElement.removeChild(toast);
-      }, 220);
-    };
-
-    setTimeout(hide, duration);
-  }
-
-  const tbody = document.getElementById('products-tbody');
-
-  const modal = document.getElementById('product-modal');
-  const modalContent = document.getElementById('modal-content');
-
-  const btnAdd = document.getElementById('btn-add-product');
-  const btnClose = document.getElementById('btn-close-modal');
-  const btnCancel = document.getElementById('btn-cancel-modal');
-
-  const form = document.getElementById('product-form');
-
-  // ==========================
-  // CARGAR PRODUCTOS
-  // ==========================
-  async function renderProducts() {
-    const products = await getProducts();
-
-    if (!products.length) {
-      tbody.innerHTML = `
-      <tr>
-        <td colspan="6" class="p-10 text-center">
-          No hay productos
-        </td>
-      </tr>
-    `;
+    if (!visible.length) {
+      list.innerHTML = `<li class="panel p-10 text-center text-gris xl:col-span-2">${
+        products.length ? 'Ningún producto coincide con la búsqueda.' : 'Aún no hay productos. Crea el primero.'
+      }</li>`;
       return;
     }
 
-    tbody.innerHTML = products
-      .map(
-        (p) => `
-      <tr>
-        <td class="p-4">
-          <img src="${p.imagen}" class="w-12 h-12 object-cover rounded">
-        </td>
-        <td class="p-4 font-bold">${p.nombre}</td>
-        <td class="p-4">S/ ${p.precio}</td>
-        <td class="p-4">${p.stock}</td>
-        <td class="p-4">${p.estado}</td>
-        <td class="p-4 text-right space-x-2">
-          <button data-id="${p.id}" class="view-btn text-blue-600">Ver</button>
-          <button data-id="${p.id}" class="edit-btn text-yellow-600">Editar</button>
-          <button data-id="${p.id}" class="delete-btn text-red-600">Eliminar</button>
-        </td>
-      </tr>
-    `,
-      )
-      .join('');
-
-    // ======================
-    // ELIMINAR
-    // ======================
-    document.querySelectorAll('.delete-btn').forEach((btn) => {
-      btn.addEventListener('click', async (e) => {
-        const id = e.target.dataset.id;
-
-        const confirmResult = await showConfirm(
-          'Eliminar producto',
-          '¿Eliminar producto? Esta acción es irreversible.',
-          'Sí, eliminar',
-          'Cancelar',
-        );
-        if (confirmResult) {
-          await deleteProduct(id);
-          showToast('Producto eliminado', 'success');
-          renderProducts();
-        }
-      });
-    });
-
-    // ======================
-    // EDITAR
-    // ======================
-    document.querySelectorAll('.edit-btn').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        const id = e.target.dataset.id;
-        const product = products.find((p) => p.id === id);
-
-        if (!product) return;
-
-        document.getElementById('form-id').value = product.id;
-        document.getElementById('form-name').value = product.nombre;
-        document.getElementById('form-price').value = product.precio;
-        document.getElementById('form-stock').value = product.stock;
-        document.getElementById('form-category').value = product.categoria;
-        document.getElementById('form-status').value = product.estado;
-        document.getElementById('form-image').value = product.imagen;
-        document.getElementById('form-description').value = product.descripcion;
-
-        openModal();
-      });
-    });
-
-    // ======================
-    // VER (simple)
-    // ======================
-    document.querySelectorAll('.view-btn').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        const id = e.target.dataset.id;
-        const product = products.find((p) => p.id === id);
-
-        if (!product) return;
-
-        showToast(
-          `Nombre: ${product.nombre} · Precio: S/ ${product.precio} · Stock: ${product.stock} · Categoría: ${product.categoria} · Estado: ${product.estado} · Descripción: ${product.descripcion}`,
-          'info',
-          6000,
-        );
-      });
-    });
-  }
-
-  // ==========================
-  // CATEGORÍAS
-  // ==========================
-  async function loadCategories() {
-    const select = document.getElementById('form-category');
-    const categories = await getCategories();
-
-    if (!categories.length) {
-      select.innerHTML = `<option>No hay categorías</option>`;
-      return;
-    }
-
-    select.innerHTML = categories
-      .map((c) => `<option value="${c.nombre}">${c.nombre}</option>`)
+    list.innerHTML = visible
+      .map((p) => {
+        const stock = Number(p.stock) || 0;
+        const visibleEnTienda = p.estado === 'activo' && stock > 0;
+        return `
+      <li class="panel flex gap-4 p-4" data-id="${escapeHtml(p.id)}">
+        <div class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-lavanda">
+          <img src="${escapeHtml(p.imagen)}" alt="" loading="lazy" class="h-full w-full object-contain p-1 mix-blend-multiply" />
+        </div>
+        <div class="flex min-w-0 grow flex-col">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="truncate font-semibold">${escapeHtml(p.nombre)}</p>
+              <p class="text-sm text-gris">${escapeHtml(p.categoria || 'Sin categoría')}</p>
+            </div>
+            <p class="shrink-0 font-display text-lg font-bold text-morado">${formatPrice(p.precio)}</p>
+          </div>
+          <div class="mt-auto flex flex-wrap items-center gap-2 pt-2">
+            <span class="badge ${stock === 0 ? 'badge-cancelado' : stock <= 5 ? 'badge-pendiente' : 'badge-completado'}">${stock === 0 ? 'Agotado' : `${stock} en stock`}</span>
+            <span class="badge ${visibleEnTienda ? 'bg-lavanda text-morado' : 'bg-gray-100 text-gris'}">${visibleEnTienda ? 'Visible' : 'Oculto'}</span>
+            <span class="ml-auto flex gap-1">
+              <button type="button" data-edit class="btn btn-soft h-9 min-h-9 px-3 text-sm">Editar</button>
+              <button type="button" data-delete class="btn btn-danger h-9 min-h-9 px-3 text-sm">Eliminar</button>
+            </span>
+          </div>
+        </div>
+      </li>`;
+      })
       .join('');
   }
 
-  // ==========================
-  // MODAL
-  // ==========================
-  function openModal() {
-    modal.classList.remove('hidden');
-
-    setTimeout(() => {
-      modal.classList.remove('opacity-0');
-      modalContent.classList.remove('scale-95');
-    }, 10);
+  function fillCategories(selectedValue = '') {
+    const select = $<HTMLSelectElement>('form-category');
+    const names = categories.map((c) => c.nombre);
+    if (selectedValue && !names.includes(selectedValue)) names.push(selectedValue);
+    select.innerHTML = names.length
+      ? names.map((n) => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')
+      : '<option value="">Primero crea una categoría</option>';
+    if (selectedValue) select.value = selectedValue;
   }
 
-  function closeModal() {
-    modal.classList.add('opacity-0');
-    modalContent.classList.add('scale-95');
-
-    setTimeout(() => {
-      modal.classList.add('hidden');
-    }, 300);
+  function updatePreview() {
+    const url = $('form-image').value.trim();
+    preview.classList.toggle('hidden', !url);
+    if (url) preview.src = url;
   }
+  $('form-image').addEventListener('input', updatePreview);
+  preview.addEventListener('error', () => preview.classList.add('hidden'));
 
-  btnAdd.addEventListener('click', () => {
+  function openForm(product?: any) {
     form.reset();
-    document.getElementById('form-id').value = '';
-    openModal();
+    $('form-id').value = product?.id || '';
+    $<HTMLElement>('modal-title').textContent = product ? 'Editar producto' : 'Nuevo producto';
+    fillCategories(product?.categoria || '');
+    if (product) {
+      $('form-name').value = product.nombre || '';
+      $('form-price').value = product.precio ?? '';
+      $('form-stock').value = product.stock ?? '';
+      $<HTMLSelectElement>('form-status').value = product.estado || 'activo';
+      $('form-image').value = product.imagen || '';
+      $<HTMLTextAreaElement>('form-description').value = product.descripcion || '';
+    }
+    updatePreview();
+    openModal(modal);
+  }
+
+  $('btn-add').addEventListener('click', () => openForm());
+  search.addEventListener('input', render);
+
+  list.addEventListener('click', async (e) => {
+    const target = e.target as HTMLElement;
+    const row = target.closest<HTMLElement>('[data-id]');
+    const product = products.find((p) => p.id === row?.dataset.id);
+    if (!product) return;
+
+    if (target.closest('[data-edit]')) openForm(product);
+
+    if (target.closest('[data-delete]')) {
+      const ok = await (window as any).showConfirm(
+        'Eliminar producto',
+        `"${product.nombre}" dejará de aparecer en la tienda. Esta acción no se puede deshacer.`,
+      );
+      if (!ok) return;
+      try {
+        await deleteProduct(product.id);
+        products = products.filter((p) => p.id !== product.id);
+        render();
+        showToast('Producto eliminado', 'success');
+      } catch (error) {
+        console.error(error);
+        showToast('No se pudo eliminar el producto.', 'error');
+      }
+    }
   });
 
-  btnClose.addEventListener('click', closeModal);
-  btnCancel.addEventListener('click', closeModal);
-
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal();
-  });
-
-  // ==========================
-  // GUARDAR (CREATE + UPDATE)
-  // ==========================
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (!form.reportValidity()) return;
 
-    const id = document.getElementById('form-id').value;
-
+    const id = $('form-id').value;
     const product = {
-      nombre: document.getElementById('form-name').value,
-      precio: Number(document.getElementById('form-price').value),
-      stock: Number(document.getElementById('form-stock').value),
-      categoria: document.getElementById('form-category').value,
-      estado: document.getElementById('form-status').value,
-      imagen: document.getElementById('form-image').value,
-      descripcion: document.getElementById('form-description').value,
+      nombre: $('form-name').value.trim(),
+      precio: Math.max(0, Number($('form-price').value) || 0),
+      stock: Math.max(0, Math.floor(Number($('form-stock').value) || 0)),
+      categoria: $<HTMLSelectElement>('form-category').value,
+      estado: $<HTMLSelectElement>('form-status').value,
+      imagen: $('form-image').value.trim(),
+      descripcion: $<HTMLTextAreaElement>('form-description').value.trim(),
     };
+    if (!product.categoria) {
+      showToast('Primero crea una categoría en la sección Categorías.', 'warning');
+      return;
+    }
 
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Guardando…';
     try {
       if (id) {
-        await updateProduct(id, product); // 👈 EDITAR
+        await updateProduct(id, product);
         showToast('Producto actualizado', 'success');
       } else {
-        await createProduct(product); // 👈 CREAR
+        await createProduct(product);
         showToast('Producto creado', 'success');
       }
-      form.reset();
-      closeModal();
-      renderProducts();
+      closeModal(modal);
+      products = await getProducts();
+      render();
     } catch (error) {
       console.error(error);
+      showToast('No se pudo guardar. Revisa tu conexión e intenta de nuevo.', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Guardar producto';
     }
   });
 
-  // ==========================
-  // INIT
-  // ==========================
-  renderProducts();
-  loadCategories();
+  async function init() {
+    await requireAdmin();
+    [products, categories] = await Promise.all([getProducts(), getCategories()]);
+    products.sort((a, b) => String(a.nombre).localeCompare(String(b.nombre)));
+    render();
+  }
+  init();
 </script>

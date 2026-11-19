@@ -1,171 +1,104 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { productsStore } from '../store/products.js';
-import { cartStore } from '../store/cart.js';
 ---
 
-<Layout
-  title="Catálogo de Productos"
-  description="Explora todos nuestros productos naturales."
->
-  <div class="max-w-7xl mx-auto px-4 py-12">
-    <!-- HEADER -->
-    <div class="flex justify-between mb-10">
-      <h1 class="text-4xl font-black">Productos</h1>
-
-      <select id="categoryFilter" class="border p-2 rounded">
-        <option value="Todos">Todos</option>
-      </select>
+<Layout title="Productos" description="Catálogo de productos naturales de E.F.D.">
+  <div class="mx-auto max-w-7xl px-4 pt-8 sm:px-6 md:pt-12 lg:px-8">
+    <div class="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+      <div>
+        <h1 class="text-4xl font-bold sm:text-5xl">Productos</h1>
+        <p id="results-count" class="mt-2 text-gris" aria-live="polite">Cargando catálogo…</p>
+      </div>
+      <label class="relative block w-full md:w-80">
+        <span class="sr-only">Buscar producto</span>
+        <svg class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gris" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <input id="search" type="search" class="field rounded-full pl-11" placeholder="Buscar por nombre" autocomplete="off" />
+      </label>
     </div>
 
-    <!-- LOADING -->
-    <div id="loading" class="text-center py-20">Cargando productos...</div>
-
-    <!-- EMPTY -->
-    <div id="empty-state" class="hidden text-center py-20">
-      No hay productos
+    <!-- Categorías: se desplazan de lado en celular -->
+    <div class="sticky top-16 z-30 -mx-4 mt-6 bg-niebla/95 px-4 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <div id="category-chips" class="no-scrollbar flex gap-2 overflow-x-auto" role="group" aria-label="Filtrar por categoría">
+        <button type="button" class="chip" aria-pressed="true" data-cat="Todos">Todos</button>
+      </div>
     </div>
 
-    <!-- GRID -->
-    <div
-      id="products-grid"
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-    >
+    <div id="products-grid" class="mt-4 grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 md:grid-cols-3 lg:grid-cols-4"></div>
+
+    <div id="empty-state" hidden class="panel mt-6 p-10 text-center">
+      <p class="font-display text-xl font-semibold">No encontramos productos</p>
+      <p class="mt-2 text-gris">Prueba con otra palabra o elige otra categoría.</p>
+      <button id="clear-filters" type="button" class="btn btn-soft mt-5">Ver todos los productos</button>
     </div>
   </div>
 </Layout>
 
 <script>
-  import { cartStore } from '../store/cart.js';
   import { productsStore } from '../store/products.js';
+  import { setGridProducts, skeletonCards } from '../lib/productCard.js';
+  import { escapeHtml } from '../lib/utils.js';
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    const grid = document.getElementById('products-grid');
-    const filter = document.getElementById('categoryFilter');
-    const loading = document.getElementById('loading');
-    const empty = document.getElementById('empty-state');
+  const grid = document.getElementById('products-grid') as HTMLElement;
+  const chips = document.getElementById('category-chips') as HTMLElement;
+  const search = document.getElementById('search') as HTMLInputElement;
+  const empty = document.getElementById('empty-state') as HTMLElement;
+  const count = document.getElementById('results-count') as HTMLElement;
 
-    // LOADING
-    loading.style.display = 'block';
+  let selected = new URLSearchParams(location.search).get('categoria') || 'Todos';
+  let products: any[] = [];
 
-    // CARGAR PRODUCTOS
-    await productsStore.loadProducts();
-    const products = productsStore.getActiveProducts();
+  grid.innerHTML = skeletonCards(8);
 
-    loading.style.display = 'none';
+  const normalize = (s: string) =>
+    (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
-    if (!products.length) {
-      empty.classList.remove('hidden');
-      return;
-    }
+  function render() {
+    const q = normalize(search.value.trim());
+    const filtered = products.filter(
+      (p) =>
+        (selected === 'Todos' || p.category === selected) &&
+        (!q || normalize(p.name).includes(q) || normalize(p.description).includes(q)),
+    );
 
-    // CATEGORÍAS DINÁMICAS
-    const categories = [
-      ...new Set(products.map((p) => p.category).filter(Boolean)),
-    ];
+    chips.querySelectorAll<HTMLButtonElement>('[data-cat]').forEach((c) => {
+      c.setAttribute('aria-pressed', String(c.dataset.cat === selected));
+    });
 
-    filter.innerHTML = `
-    <option value="Todos">Todos</option>
-    ${categories.map((c) => `<option value="${c}">${c}</option>`).join('')}
-  `;
+    count.textContent =
+      filtered.length === 1 ? '1 producto disponible' : `${filtered.length} productos disponibles`;
+    empty.hidden = filtered.length > 0;
+    setGridProducts(grid, filtered);
+  }
 
-    // =========================
-    // RENDER
-    // =========================
-    function renderProducts() {
-      const selected = filter.value;
+  productsStore.loadProducts().then(() => {
+    products = productsStore.getActiveProducts();
+    const categories = [...new Set(products.map((p) => p.category).filter(Boolean))].sort();
+    if (!categories.includes(selected)) selected = 'Todos';
 
-      const filtered =
-        selected === 'Todos'
-          ? products
-          : products.filter((p) => p.category === selected);
-
-      if (!filtered.length) {
-        grid.innerHTML = '';
-        empty.classList.remove('hidden');
-        return;
-      }
-
-      empty.classList.add('hidden');
-
-      grid.innerHTML = filtered
-        .map(
-          (prod) => `
-      <div class="bg-white p-4 rounded shadow flex flex-col">
-
-        <div class="w-full h-40 bg-gray-100 overflow-hidden rounded-lg mb-3">
-          <img src="${prod.image}" class="w-full h-full object-contain object-center" alt="${prod.name}" />
-        </div>
-
-        <h3 class="font-bold">${prod.name}</h3>
-
-        <p class="text-sm text-gray-500">${prod.description || ''}</p>
-
-        <div class="mt-auto flex justify-between items-center">
-          <span class="font-bold text-purple-700">
-            S/ ${(Number(prod.price) || 0).toFixed(2)}
-          </span>
-
-          ${
-            prod.stock === 0
-              ? '<span class="text-red-500 font-bold">Sin stock</span>'
-              : `<button
-            data-product-id="${prod.id}"
-            data-product-name="${prod.name}"
-            data-product-price="${prod.price}"
-            data-product-image="${prod.image}"
-            data-product-stock="${prod.stock}"
-            class="add-btn bg-purple-600 text-white px-3 py-1 rounded group"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path> </svg> <span class="btn-text">Agregar</span>
-          </button>`
-          }
-
-        </div>
-      </div>
-    `,
-        )
+    chips.innerHTML =
+      `<button type="button" class="chip" data-cat="Todos">Todos</button>` +
+      categories
+        .map((c) => `<button type="button" class="chip" data-cat="${escapeHtml(c)}">${escapeHtml(c)}</button>`)
         .join('');
+    render();
+  });
 
-      attachCartEvents();
-    }
+  chips.addEventListener('click', (e) => {
+    const chip = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-cat]');
+    if (!chip) return;
+    selected = chip.dataset.cat || 'Todos';
+    const url = new URL(location.href);
+    if (selected === 'Todos') url.searchParams.delete('categoria');
+    else url.searchParams.set('categoria', selected);
+    history.replaceState(null, '', url);
+    render();
+  });
 
-    // =========================
-    // CARRITO (IGUAL QUE INDEX)
-    // =========================
-    function attachCartEvents() {
-      const buttons = document.querySelectorAll('.add-btn');
+  search.addEventListener('input', render);
 
-      buttons.forEach((btn) => {
-        btn.addEventListener('click', (e) => {
-          const button = e.currentTarget;
-
-          const id = button.dataset.productId;
-          const name = button.dataset.productName;
-          const price = parseFloat(button.dataset.productPrice || '0');
-          const image = button.dataset.productImage;
-          const stock = parseInt(button.dataset.productStock || '0');
-
-          if (id && name && image) {
-            cartStore.addItem({ id, name, price, image, stock }, 1);
-
-            const text = button.querySelector('.btn-text');
-
-            button.classList.replace('bg-purple-600', 'bg-green-500');
-            if (text) text.textContent = '✔';
-
-            setTimeout(() => {
-              button.classList.replace('bg-green-500', 'bg-purple-600');
-              if (text) text.textContent = 'Agregar';
-            }, 1200);
-          }
-        });
-      });
-    }
-
-    // EVENTOS
-    filter.addEventListener('change', renderProducts);
-
-    renderProducts();
+  document.getElementById('clear-filters')?.addEventListener('click', () => {
+    search.value = '';
+    selected = 'Todos';
+    render();
   });
 </script>

@@ -1,374 +1,139 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { authStore } from '../store/auth.js';
+import AuthShell from '../components/AuthShell.astro';
+import PasswordField from '../components/PasswordField.astro';
 ---
 
-<Layout title="Iniciar Sesión" description="Accede a tu cuenta de NaturaBio.">
-  <div
-    class="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50"
-  >
-    <div
-      class="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100"
-    >
-      <div class="text-center">
-        <!-- Logo -->
-        <a href="/" class="inline-flex items-center gap-2 mb-6 group">
-          <div
-            class="w-12 h-12 bg-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl group-hover:bg-purple-700 transition-colors shadow-md shadow-purple-200"
-          >
-            E
-          </div>
-        </a>
-        <h2 class="text-3xl font-black text-gray-900 tracking-tight">
-          Bienvenido de nuevo
-        </h2>
-        <p class="mt-3 text-gray-500">
-          ¿No tienes una cuenta?
-          <a
-            href="/register"
-            class="font-bold text-purple-600 hover:text-purple-500 transition-colors"
-            >Regístrate gratis</a
-          >
-        </p>
+<Layout title="Iniciar sesión" description="Ingresa a tu cuenta de E.F.D.">
+  <AuthShell heading="Iniciar sesión">
+    <p class="mt-2 text-gris">
+      ¿Primera vez aquí? <a href="/register" data-keep-redirect class="font-semibold text-morado hover:underline">Crea tu cuenta</a>
+    </p>
+
+    <div id="form-message" hidden role="alert" class="mt-6 rounded-2xl px-4 py-3 text-sm font-medium"></div>
+
+    <form id="login-form" class="mt-6 space-y-5" novalidate>
+      <div>
+        <label for="email" class="label">Correo electrónico</label>
+        <input id="email" name="email" type="email" autocomplete="email" inputmode="email" required class="field" placeholder="tu@correo.com" />
+      </div>
+      <PasswordField id="password" label="Contraseña" autocomplete="current-password" />
+
+      <div class="flex items-center justify-between gap-4">
+        <label class="flex cursor-pointer items-center gap-2 text-sm">
+          <input id="remember" type="checkbox" checked class="h-4 w-4 accent-[#5b21b6]" />
+          Mantener sesión iniciada
+        </label>
+        <button id="forgot-btn" type="button" class="text-sm font-semibold text-morado hover:underline">
+          Olvidé mi contraseña
+        </button>
       </div>
 
-      <div
-        id="error-message"
-        class="hidden bg-red-50 text-red-600 p-4 rounded-xl text-sm font-medium border border-red-100 items-center gap-2"
-      >
-        <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20"
-          ><path
-            fill-rule="evenodd"
-            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-            clip-rule="evenodd"></path></svg
-        >
-        <span></span>
-      </div>
+      <button id="submit-btn" type="submit" class="btn btn-primary h-12 w-full text-base">Iniciar sesión</button>
+    </form>
 
-      <form id="login-form" class="mt-8 space-y-6">
-        <div class="space-y-4">
-          <div>
-            <label
-              for="email-address"
-              class="block text-sm font-semibold text-gray-700 mb-1"
-              >Correo electrónico</label
-            >
-            <input
-              id="email-address"
-              name="email"
-              type="email"
-              autocomplete="email"
-              required
-              class="appearance-none relative block w-full px-4 py-3 border border-gray-200 bg-gray-50 placeholder-gray-400 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent focus:bg-white transition-all sm:text-sm"
-              placeholder="tu@correo.com"
-            />
-          </div>
-          <div class="relative">
-            <label
-              for="password"
-              class="block text-sm font-semibold text-gray-700 mb-1"
-              >Contraseña</label
-            >
-            <div class="relative">
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autocomplete="current-password"
-                required
-                class="appearance-none relative block w-full px-4 py-3 pr-12 border border-gray-200 bg-gray-50 placeholder-gray-400 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent focus:bg-white transition-all sm:text-sm"
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                id="toggle-password"
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-purple-600 focus:outline-none transition-colors p-1"
-                aria-label="Mostrar/Ocultar contraseña"
-              >
-                <svg
-                  id="eye-open"
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                  ></path>
-                </svg>
-                <svg
-                  id="eye-closed"
-                  class="w-5 h-5 hidden"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.04m4.577-2.708A9.965 9.965 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21m-6.336-6.336l-1.04-1.04m1.04 1.04A3 3 0 1112 12.122"
-                  ></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <input
-              id="remember-me"
-              name="remember-me"
-              type="checkbox"
-              class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded cursor-pointer"
-            />
-            <label
-              for="remember-me"
-              class="ml-2 block text-sm text-gray-700 cursor-pointer"
-            >
-              Recordarme
-            </label>
-          </div>
-
-          <div class="text-sm">
-            <a
-              href="#"
-              class="font-bold text-purple-600 hover:text-purple-500 transition-colors"
-            >
-              ¿Olvidaste tu contraseña?
-            </a>
-          </div>
-        </div>
-
-        <div>
-          <button
-            type="submit"
-            class="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all shadow-lg shadow-purple-200 active:scale-[0.98]"
-          >
-            <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-              <svg
-                class="h-5 w-5 text-purple-500 group-hover:text-purple-400 transition-colors"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                  clip-rule="evenodd"></path>
-              </svg>
-            </span>
-            Iniciar Sesión
-          </button>
-        </div>
-      </form>
-
-      <div class="mt-6">
-        <div class="relative">
-          <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-gray-200"></div>
-          </div>
-          <div class="relative flex justify-center text-sm">
-            <span class="px-3 bg-white text-gray-500 font-medium"
-              >O continúa con</span
-            >
-          </div>
-        </div>
-
-        <div class="mt-6">
-          <button
-            id="google-login-btn"
-            class="w-full inline-flex justify-center items-center gap-3 py-3 px-4 border border-gray-200 rounded-xl shadow-sm bg-white text-sm font-bold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 transition-all hover:border-gray-300"
-          >
-            <svg
-              class="h-5 w-5"
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              xmlns="http://www.w3.org/2000/svg"
-              ><path
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                fill="#4285F4"></path><path
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                fill="#34A853"></path><path
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                fill="#FBBC05"></path><path
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                fill="#EA4335"></path><path d="M1 1h22v22H1z" fill="none"
-              ></path></svg
-            >
-            Google
-          </button>
-        </div>
-      </div>
+    <div class="my-6 flex items-center gap-3 text-sm text-gris">
+      <span class="h-px grow bg-borde"></span>o<span class="h-px grow bg-borde"></span>
     </div>
-  </div>
+
+    <button id="google-btn" type="button" class="btn btn-outline h-12 w-full text-base">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z" fill="#34A853"></path><path d="M5.84 14.09A6.6 6.6 0 0 1 5.49 12c0-.73.13-1.43.35-2.09V7.07H2.18A11 11 0 0 0 1 12c0 1.78.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"></path><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z" fill="#EA4335"></path></svg>
+      Continuar con Google
+    </button>
+  </AuthShell>
 </Layout>
 
 <script>
   import { authStore } from '../store/auth.js';
+  import { safeRedirect } from '../lib/utils.js';
 
-  // Toast function inlined to avoid import issues in static builds
-  function showToast(message, type = 'info', duration = 3200) {
-    if (typeof window === 'undefined') return;
+  const params = new URLSearchParams(location.search);
+  const redirectParam = params.get('redirect');
+  const destination = () =>
+    safeRedirect(redirectParam, authStore.isAdmin() ? '/admin/dashboard' : '/');
 
-    let container = document.getElementById('global-toast-container');
-
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'global-toast-container';
-      container.style.position = 'fixed';
-      container.style.top = '1rem';
-      container.style.right = '1rem';
-      container.style.zIndex = 9999;
-      container.style.display = 'flex';
-      container.style.flexDirection = 'column';
-      container.style.gap = '0.5rem';
-      document.body.appendChild(container);
-    }
-
-    const toast = document.createElement('div');
-    toast.style.minWidth = '240px';
-    toast.style.padding = '12px 14px';
-    toast.style.borderRadius = '10px';
-    toast.style.color = '#ffffff';
-    toast.style.boxShadow = '0 8px 22px rgba(0, 0, 0, 0.16)';
-    toast.style.fontSize = '0.9rem';
-    toast.style.fontWeight = '600';
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(20px)';
-    toast.style.transition = 'opacity 220ms ease, transform 220ms ease';
-
-    let backgroundColor = '#06b6d4';
-    if (type === 'success') backgroundColor = '#10b981';
-    if (type === 'warning') backgroundColor = '#f59e0b';
-    if (type === 'error') backgroundColor = '#ef4444';
-
-    toast.style.backgroundColor = backgroundColor;
-    toast.textContent = message;
-
-    container.appendChild(toast);
-
-    requestAnimationFrame(() => {
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateX(0)';
+  // Lleva el ?redirect= también al enlace de registro.
+  if (redirectParam) {
+    document.querySelectorAll<HTMLAnchorElement>('[data-keep-redirect]').forEach((a) => {
+      a.href += `?redirect=${encodeURIComponent(safeRedirect(redirectParam))}`;
     });
-
-    const hide = () => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateX(20px)';
-      setTimeout(() => {
-        if (toast.parentElement) toast.parentElement.removeChild(toast);
-      }, 220);
-    };
-
-    setTimeout(hide, duration);
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    if (authStore.isLoggedIn()) {
-      window.location.href = authStore.isAdmin() ? '/admin/dashboard' : '/';
+  // Si ya hay sesión real (confirmada por Firebase), no tiene sentido estar aquí.
+  authStore.ready.then(() => {
+    if (authStore.isLoggedIn()) location.replace(destination());
+  });
+  window.addEventListener('auth_change', () => {
+    if (authStore.isLoggedIn()) location.replace(destination());
+  });
+
+  const form = document.getElementById('login-form') as HTMLFormElement;
+  const email = document.getElementById('email') as HTMLInputElement;
+  const password = document.getElementById('password') as HTMLInputElement;
+  const remember = document.getElementById('remember') as HTMLInputElement;
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+  const googleBtn = document.getElementById('google-btn') as HTMLButtonElement;
+  const msg = document.getElementById('form-message') as HTMLElement;
+
+  function showMessage(text: string, kind: 'error' | 'success' = 'error') {
+    msg.textContent = text;
+    msg.className =
+      'mt-6 rounded-2xl px-4 py-3 text-sm font-medium ' +
+      (kind === 'error' ? 'bg-[#fdecea] text-[#b42318]' : 'bg-[#e3f3e8] text-hoja');
+    msg.hidden = false;
+  }
+
+  function setBusy(busy: boolean) {
+    submitBtn.disabled = busy;
+    googleBtn.disabled = busy;
+    submitBtn.textContent = busy ? 'Ingresando…' : 'Iniciar sesión';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    msg.hidden = true;
+
+    if (!email.value.trim() || !password.value) {
+      showMessage('Escribe tu correo y tu contraseña.');
       return;
     }
 
-    const form = document.getElementById('login-form');
-    const errorMsg = document.getElementById('error-message');
-    const googleBtn = document.getElementById('google-login-btn');
-    const passwordInput = document.getElementById('password') as HTMLInputElement;
-    const togglePasswordBtn = document.getElementById('toggle-password');
-    const eyeOpenIcon = document.getElementById('eye-open');
-    const eyeClosedIcon = document.getElementById('eye-closed');
+    setBusy(true);
+    const result = await authStore.login(email.value.trim(), password.value, remember.checked);
+    if (result.success) {
+      location.href = destination();
+    } else {
+      setBusy(false);
+      showMessage(result.message);
+      password.select();
+    }
+  });
 
-    // 👀 TOGGLE PASSWORD
-    togglePasswordBtn?.addEventListener('click', () => {
-      const isPassword = passwordInput.type === 'password';
-      passwordInput.type = isPassword ? 'text' : 'password';
+  googleBtn.addEventListener('click', async () => {
+    msg.hidden = true;
+    setBusy(true);
+    const result = await authStore.loginWithGoogle();
+    if (result.redirecting) return;
+    if (result.success) {
+      location.href = destination();
+    } else {
+      setBusy(false);
+      showMessage(result.message);
+    }
+  });
 
-      if (isPassword) {
-        eyeOpenIcon?.classList.add('hidden');
-        eyeClosedIcon?.classList.remove('hidden');
-      } else {
-        eyeOpenIcon?.classList.remove('hidden');
-        eyeClosedIcon?.classList.add('hidden');
-      }
-    });
-
-    // 🔥 LOGIN NORMAL
-    form?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const emailInput = document.getElementById('email-address');
-      const passwordInput = document.getElementById('password');
-
-      if (!emailInput || !passwordInput) return;
-
-      const email = emailInput.value;
-      const password = passwordInput.value;
-
-      const result = await authStore.login(email, password);
-
-      if (result.success) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const redirectTo = urlParams.get('redirect') || (authStore.isAdmin() ? '/admin/dashboard' : '/');
-        window.location.href = redirectTo;
-      } else {
-        if (errorMsg) {
-          const span = errorMsg.querySelector('span');
-          if (span) {
-            span.textContent = result.message || 'Error al iniciar sesión';
-          }
-          errorMsg.classList.remove('hidden');
-          errorMsg.classList.add('flex');
-        }
-      }
-    });
-
-    // 🔥 GOOGLE LOGIN (ARREGLADO)
-    googleBtn?.addEventListener('click', async () => {
-      console.log('Click Google'); // 👈 DEBUG
-
-      try {
-        const result = await authStore.loginWithGoogle();
-
-        if (result.success) {
-          window.location.href = '/';
-        } else {
-          showToast('Error con Google', 'error');
-        }
-      } catch (error) {
-        console.error(error);
-        showToast('Error real en consola', 'error');
-      }
-    });
+  document.getElementById('forgot-btn')?.addEventListener('click', async () => {
+    const value = email.value.trim();
+    if (!value) {
+      showMessage('Escribe tu correo arriba y vuelve a tocar "Olvidé mi contraseña".');
+      email.focus();
+      return;
+    }
+    const result = await authStore.resetPassword(value);
+    if (result.success) {
+      showMessage(`Te enviamos un enlace a ${value} para crear una nueva contraseña.`, 'success');
+    } else {
+      showMessage(result.message);
+    }
   });
 </script>
-
-<style>
-  @keyframes shake {
-    0%,
-    100% {
-      transform: translateX(0);
-    }
-    25% {
-      transform: translateX(-5px);
-    }
-    75% {
-      transform: translateX(5px);
-    }
-  }
-  .animate-shake {
-    animation: shake 0.4s ease-in-out;
-  }
-</style>

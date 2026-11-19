@@ -1,231 +1,111 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import ConfirmModal from '../../components/ConfirmModal.astro';
-import { authStore } from '../../store/auth.js';
-import { showToast } from '../../lib/toast.js';
-import {
-  getCategories,
-  createCategory,
-  deleteCategory,
-} from '../../lib/firebaseCategories.js';
 ---
 
-<AdminLayout
-  title="Gestión de Categorías"
-  description="Administra las categorías de productos"
->
-  <div
-    class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-  >
-    <div>
-      <h1 class="text-3xl font-black text-gray-900 tracking-tight">
-        Categorías
-      </h1>
-      <p class="text-gray-500 mt-1">
-        Gestiona las categorías disponibles para tus productos.
-      </p>
-    </div>
-    <button
-      id="btn-add-category"
-      class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-5 rounded-xl transition-colors shadow-sm shadow-purple-200 flex items-center gap-2"
-    >
-      Nueva Categoría
-    </button>
-  </div>
+<AdminLayout title="Categorías">
+  <h1 class="text-3xl font-bold sm:text-4xl">Categorías</h1>
+  <p class="mt-1 text-gris">Agrupan los productos en la tienda y aparecen como filtros.</p>
 
-  <div
-    class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden min-h-[50vh] max-w-3xl"
-  >
-    <ul id="categories-list" class="divide-y divide-gray-100">
-      <!-- Populated by JS -->
-    </ul>
-  </div>
+  <form id="category-form" class="mt-6 flex max-w-xl gap-2">
+    <label for="cat-name" class="sr-only">Nombre de la nueva categoría</label>
+    <input id="cat-name" type="text" required maxlength="40" class="field" placeholder="Nueva categoría, ej. Infusiones" />
+    <button id="cat-submit" type="submit" class="btn btn-primary h-12 shrink-0">Agregar</button>
+  </form>
 
-  <div
-    id="category-modal"
-    class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4"
-  >
-    <div
-      class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6"
-      id="cat-modal-content"
-    >
-      <h2 class="text-xl font-bold mb-4">Nueva Categoría</h2>
-      <form id="category-form" class="space-y-4">
-        <input
-          type="text"
-          id="cat-name"
-          required
-          class="w-full px-4 py-3 border rounded-xl"
-          placeholder="Nombre..."
-        />
-        <div class="flex justify-end gap-3 pt-4">
-          <button type="button" id="btn-cancel-cat" class="px-5 py-2"
-            >Cancelar</button
-          >
-          <button
-            type="submit"
-            class="px-5 py-2 bg-purple-600 text-white rounded-xl"
-            >Guardar</button
-          >
-        </div>
-      </form>
-    </div>
-  </div>
-  <ConfirmModal id="delete-cat-modal" />
+  <ul id="categories-list" class="panel mt-6 max-w-xl divide-y divide-borde">
+    <li class="p-5"><div class="skeleton h-6"></div></li>
+  </ul>
 </AdminLayout>
 
 <script>
-  import { authStore } from '../../store/auth.js';
-  import {
-    getCategories,
-    createCategory,
-    deleteCategory,
-  } from '../../lib/firebaseCategories.js';
+  import { requireAdmin } from '../../lib/adminGuard.js';
+  import { getCategories, createCategory, deleteCategory } from '../../lib/firebaseCategories.js';
+  import { getProducts } from '../../lib/firebaseProducts.js';
+  import { showToast } from '../../lib/toast.js';
+  import { escapeHtml } from '../../lib/utils.js';
 
-  // Toast function inlined to avoid import issues in static builds
-  function showToast(message, type = 'info', duration = 3200) {
-    if (typeof window === 'undefined') return;
+  const list = document.getElementById('categories-list') as HTMLElement;
+  const form = document.getElementById('category-form') as HTMLFormElement;
+  const input = document.getElementById('cat-name') as HTMLInputElement;
+  const submit = document.getElementById('cat-submit') as HTMLButtonElement;
 
-    let container = document.getElementById('global-toast-container');
+  let categories: any[] = [];
+  let counts: Record<string, number> = {};
 
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'global-toast-container';
-      container.style.position = 'fixed';
-      container.style.top = '1rem';
-      container.style.right = '1rem';
-      container.style.zIndex = 9999;
-      container.style.display = 'flex';
-      container.style.flexDirection = 'column';
-      container.style.gap = '0.5rem';
-      document.body.appendChild(container);
-    }
-
-    const toast = document.createElement('div');
-    toast.style.minWidth = '240px';
-    toast.style.padding = '12px 14px';
-    toast.style.borderRadius = '10px';
-    toast.style.color = '#ffffff';
-    toast.style.boxShadow = '0 8px 22px rgba(0, 0, 0, 0.16)';
-    toast.style.fontSize = '0.9rem';
-    toast.style.fontWeight = '600';
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(20px)';
-    toast.style.transition = 'opacity 220ms ease, transform 220ms ease';
-
-    let backgroundColor = '#06b6d4';
-    if (type === 'success') backgroundColor = '#10b981';
-    if (type === 'warning') backgroundColor = '#f59e0b';
-    if (type === 'error') backgroundColor = '#ef4444';
-
-    toast.style.backgroundColor = backgroundColor;
-    toast.textContent = message;
-
-    container.appendChild(toast);
-
-    requestAnimationFrame(() => {
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateX(0)';
-    });
-
-    const hide = () => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateX(20px)';
-      setTimeout(() => {
-        if (toast.parentElement) toast.parentElement.removeChild(toast);
-      }, 220);
-    };
-
-    setTimeout(hide, duration);
+  function render() {
+    list.innerHTML = categories.length
+      ? categories
+          .map(
+            (c) => `
+        <li class="flex items-center justify-between gap-4 p-4 pl-5" data-id="${escapeHtml(c.id)}">
+          <div>
+            <p class="font-semibold">${escapeHtml(c.nombre)}</p>
+            <p class="text-sm text-gris">${counts[c.nombre] || 0} productos</p>
+          </div>
+          <button type="button" data-delete class="btn btn-danger h-9 min-h-9 px-3 text-sm">Eliminar</button>
+        </li>`,
+          )
+          .join('')
+      : '<li class="p-8 text-center text-gris">Aún no hay categorías. Agrega la primera arriba.</li>';
   }
 
-  if (!authStore.isAdmin()) {
-    window.location.replace('/login');
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    const list = document.getElementById('categories-list');
-    const modal = document.getElementById('category-modal');
-    const form = document.getElementById('category-form');
-    const catName = document.getElementById('cat-name');
-
-    // ==========================
-    // RENDER CATEGORÍAS 🔥
-    // ==========================
-    async function render() {
-      const cats = await getCategories();
-
-      if (!list) return;
-
-      list.innerHTML = cats.length
-        ? cats
-            .map(
-              (cat) => `
-          <li class="p-4 flex items-center justify-between border-b">
-            <span class="font-bold">${cat.nombre}</span>
-            <button data-id="${cat.id}" class="del-btn text-red-500">
-              Eliminar
-            </button>
-          </li>
-        `,
-            )
-            .join('')
-        : '<li class="p-8 text-center text-gray-500">Sin categorías.</li>';
-
-      // eliminar
-      list.querySelectorAll('.del-btn').forEach((btn) => {
-        btn.addEventListener('click', async (e) => {
-          const id = e.currentTarget.dataset.id;
-
-          if (!id) return;
-
-          const confirmResult = await showConfirm(
-            'Eliminar categoría',
-            '¿Eliminar categoría? Esta acción es irreversible.',
-            'Sí, eliminar',
-            'Cancelar',
-          );
-          if (confirmResult) {
-            await deleteCategory(id);
-            showToast('Categoría eliminada', 'success');
-            render();
-          }
-        });
-      });
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nombre = input.value.trim();
+    if (!nombre) return;
+    if (categories.some((c) => c.nombre.toLowerCase() === nombre.toLowerCase())) {
+      showToast('Esa categoría ya existe', 'warning');
+      return;
     }
-
-    // ==========================
-    // MODAL
-    // ==========================
-    document
-      .getElementById('btn-add-category')
-      ?.addEventListener('click', () => modal?.classList.remove('hidden'));
-
-    document
-      .getElementById('btn-cancel-cat')
-      ?.addEventListener('click', () => modal?.classList.add('hidden'));
-
-    // ==========================
-    // CREAR CATEGORÍA
-    // ==========================
-    form?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const nombre = catName.value.trim();
-
-      if (!nombre) return;
-
+    submit.disabled = true;
+    try {
       await createCategory({ nombre });
-
-      modal?.classList.add('hidden');
       form.reset();
-
+      categories = await getCategories();
       render();
-    });
-
-    // ==========================
-    // INIT
-    // ==========================
-    render();
+      showToast('Categoría agregada', 'success');
+    } catch (error) {
+      console.error(error);
+      showToast('No se pudo agregar la categoría.', 'error');
+    } finally {
+      submit.disabled = false;
+    }
   });
+
+  list.addEventListener('click', async (e) => {
+    const btn = (e.target as HTMLElement).closest('[data-delete]');
+    const row = btn?.closest<HTMLElement>('[data-id]');
+    const cat = categories.find((c) => c.id === row?.dataset.id);
+    if (!cat) return;
+
+    const n = counts[cat.nombre] || 0;
+    const ok = await (window as any).showConfirm(
+      'Eliminar categoría',
+      n
+        ? `"${cat.nombre}" tiene ${n} productos. Seguirán existiendo, pero sin esta categoría en el formulario.`
+        : `Se eliminará "${cat.nombre}".`,
+    );
+    if (!ok) return;
+    try {
+      await deleteCategory(cat.id);
+      categories = categories.filter((c) => c.id !== cat.id);
+      render();
+      showToast('Categoría eliminada', 'success');
+    } catch (error) {
+      console.error(error);
+      showToast('No se pudo eliminar la categoría.', 'error');
+    }
+  });
+
+  async function init() {
+    await requireAdmin();
+    const [cats, products]: any[] = await Promise.all([getCategories(), getProducts()]);
+    categories = cats.sort((a: any, b: any) => String(a.nombre).localeCompare(String(b.nombre)));
+    counts = products.reduce((acc: Record<string, number>, p: any) => {
+      acc[p.categoria] = (acc[p.categoria] || 0) + 1;
+      return acc;
+    }, {});
+    render();
+  }
+  init();
 </script>

@@ -8,6 +8,7 @@ import {
   addDoc,
   Timestamp,
 } from 'firebase/firestore';
+import { adjustStock } from './firebaseProducts.js';
 
 const ordersRef = collection(db, 'pedidos');
 
@@ -41,8 +42,31 @@ export async function getOrders() {
   }
 }
 
-export async function updateOrderStatus(id, estado) {
-  await updateDoc(doc(db, 'pedidos', id), { estado });
+/**
+ * Cambia el estado de un pedido y ajusta el stock una sola vez.
+ * Antes, pasar un pedido a "completado" varias veces descontaba el stock
+ * cada vez. Ahora se guarda `stockDescontado` y, si el pedido deja de estar
+ * completado, las unidades vuelven al inventario.
+ */
+export async function updateOrderStatus(order, estado) {
+  const productos = Array.isArray(order.productos) ? order.productos : [];
+  // Pedidos antiguos completados (sin el campo) ya descontaron su stock.
+  let stockDescontado =
+    order.stockDescontado ?? (order.estado || '').toLowerCase() === 'completado';
+
+  if (estado === 'completado' && !stockDescontado) {
+    for (const p of productos) {
+      if (p?.id) await adjustStock(p.id, -(Number(p.cantidad) || 0));
+    }
+    stockDescontado = true;
+  } else if (estado !== 'completado' && stockDescontado) {
+    for (const p of productos) {
+      if (p?.id) await adjustStock(p.id, Number(p.cantidad) || 0);
+    }
+    stockDescontado = false;
+  }
+
+  await updateDoc(doc(db, 'pedidos', order.id), { estado, stockDescontado });
 }
 
 export async function deleteOrder(id) {

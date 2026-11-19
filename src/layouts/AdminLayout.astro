@@ -2,22 +2,24 @@
 import Layout from './Layout.astro';
 import AdminSidebar from '../components/AdminSidebar.astro';
 import AdminGuard from '../components/AdminGuard.astro';
+import ConfirmModal from '../components/ConfirmModal.astro';
 
 interface Props {
   title: string;
   description?: string;
 }
 
-const { title, description = 'Panel de administración' } = Astro.props;
+const { title, description = 'Panel de administración de E.F.D.' } = Astro.props;
 ---
 
-<Layout title={title} description={description}>
+<Layout title={title} description={description} admin>
   <AdminGuard>
-    <div class="flex bg-gray-50 min-h-screen">
+    <div class="flex min-h-[calc(100vh-4rem)]">
       <AdminSidebar />
-      <main class="grow p-4 md:p-8 w-full max-w-full overflow-hidden relative">
+      <div class="w-full min-w-0 grow px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 md:p-8 lg:p-10">
         <slot />
-      </main>
+      </div>
     </div>
   </AdminGuard>
+  <ConfirmModal />
 </Layout>

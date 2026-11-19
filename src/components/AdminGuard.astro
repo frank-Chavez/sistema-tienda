@@ -1,81 +1,23 @@
 ---
-// Componente de protección para rutas de admin
-// Verifica que el usuario sea admin antes de mostrar contenido
-import { authStore } from '../store/auth.js';
+// Muestra "Verificando acceso…" hasta confirmar que el usuario es administrador.
 ---
 
-<div id="admin-guard-container">
-  <div
-    id="loading-guard"
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-  >
-    <div class="bg-white rounded-lg p-8 text-center">
-      <div
-        class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"
-      >
-      </div>
-      <p class="text-gray-600">Verificando acceso...</p>
-    </div>
+<div id="admin-guard" class="fixed inset-0 z-[90] flex items-center justify-center bg-niebla">
+  <div class="text-center">
+    <div class="mx-auto h-10 w-10 animate-spin rounded-full border-[3px] border-lavanda border-t-morado"></div>
+    <p class="mt-4 text-gris">Verificando acceso…</p>
   </div>
-
-  <slot />
 </div>
+<slot />
 
 <script>
-  import { authStore } from '../store/auth.js';
+  import { requireAdmin } from '../lib/adminGuard.js';
 
-  // 🔒 VERIFICACIÓN DE ADMIN - Se ejecuta inmediatamente
-  async function protectAdminRoute() {
-    const loadingGuard = document.getElementById('loading-guard');
-
-    try {
-      // Recargar usuario desde localStorage
-      authStore.loadUser();
-
-      // Si no es admin, redirigir a login
-      if (!authStore.isAdmin()) {
-        console.warn('❌ Acceso denegado: Usuario no es administrador');
-        // Pequeño delay para que se vea el loader
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 500);
-        return;
-      }
-
-      // ✅ Si es admin, ocultar el loader y mostrar contenido
-      if (loadingGuard) {
-        loadingGuard.style.opacity = '0';
-        loadingGuard.style.transition = 'opacity 0.3s ease';
-        setTimeout(() => {
-          loadingGuard.style.display = 'none';
-        }, 300);
-      }
-
-      console.log('✅ Acceso permitido: Usuario es administrador');
-    } catch (error) {
-      console.error('Error en AdminGuard:', error);
-      setTimeout(() => {
-        window.location.href = '/login';
-      }, 500);
-    }
-  }
-
-  // Ejecutar cuando el DOM esté listo
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', protectAdminRoute);
-  } else {
-    protectAdminRoute();
-  }
+  requireAdmin().then(() => {
+    const guard = document.getElementById('admin-guard');
+    if (!guard) return;
+    guard.style.transition = 'opacity 200ms ease';
+    guard.style.opacity = '0';
+    setTimeout(() => guard.remove(), 200);
+  });
 </script>
-
-<style>
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  .animate-spin {
-    animation: spin 1s linear infinite;
-  }
-</style>

@@ -1,197 +1,91 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import ConfirmModal from '../../components/ConfirmModal.astro';
-import { showToast } from '../../lib/toast.js';
-import { getUsers, deleteUser } from '../../lib/firebaseUsers.js';
 ---
 
-<AdminLayout
-  title="Usuarios Registrados"
-  description="Administra los usuarios de NaturaBio"
->
-  <div>
-    <div class="mb-8">
-      <h1 class="text-3xl font-black text-gray-900 tracking-tight">Usuarios</h1>
-      <p class="text-gray-500 mt-1">
-        Lista de clientes y administradores registrados en la plataforma.
-      </p>
-    </div>
+<AdminLayout title="Usuarios">
+  <h1 class="text-3xl font-bold sm:text-4xl">Usuarios</h1>
+  <p id="users-count" class="mt-1 text-gris">&nbsp;</p>
 
-    <!-- Users Table -->
-    <div
-      class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden min-h-[50vh]"
-    >
-      <ConfirmModal id="confirm-modal" />
-      <div class="overflow-x-auto w-full">
-        <table class="w-full text-left border-collapse min-w-200">
-          <thead>
-            <tr
-              class="bg-gray-50 text-gray-500 text-sm border-b border-gray-100"
-            >
-              <th class="py-4 px-6 font-semibold w-20">#</th>
-              <th class="py-4 px-6 font-semibold">Nombre</th>
-              <th class="py-4 px-6 font-semibold">Correo</th>
-              <th class="py-4 px-6 font-semibold">Rol</th>
-              <th class="py-4 px-6 font-semibold text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="users-tbody" class="divide-y divide-gray-100 text-gray-700"
-          ></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+  <label class="mt-6 block sm:max-w-sm">
+    <span class="sr-only">Buscar usuario</span>
+    <input id="search" type="search" class="field rounded-full" placeholder="Buscar por nombre o correo" />
+  </label>
+
+  <ul id="users-list" class="panel mt-5 divide-y divide-borde">
+    <li class="p-5"><div class="skeleton h-10"></div></li>
+  </ul>
 </AdminLayout>
 
 <script>
+  import { requireAdmin } from '../../lib/adminGuard.js';
   import { getUsers, deleteUser } from '../../lib/firebaseUsers.js';
+  import { showToast } from '../../lib/toast.js';
+  import { escapeHtml } from '../../lib/utils.js';
 
-  // Toast function inlined to avoid import issues in static builds
-  function showToast(message, type = 'info', duration = 3200) {
-    if (typeof window === 'undefined') return;
+  const list = document.getElementById('users-list') as HTMLElement;
+  const search = document.getElementById('search') as HTMLInputElement;
+  let users: any[] = [];
 
-    let container = document.getElementById('global-toast-container');
+  function render() {
+    const q = search.value.trim().toLowerCase();
+    const visible = users.filter((u) => !q || `${u.nombre} ${u.email}`.toLowerCase().includes(q));
+    const clientes = users.filter((u) => u.rol !== 'admin').length;
+    (document.getElementById('users-count') as HTMLElement).textContent =
+      `${clientes} clientes y ${users.length - clientes} administradores`;
 
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'global-toast-container';
-      container.style.position = 'fixed';
-      container.style.top = '1rem';
-      container.style.right = '1rem';
-      container.style.zIndex = 9999;
-      container.style.display = 'flex';
-      container.style.flexDirection = 'column';
-      container.style.gap = '0.5rem';
-      document.body.appendChild(container);
-    }
-
-    const toast = document.createElement('div');
-    toast.style.minWidth = '240px';
-    toast.style.padding = '12px 14px';
-    toast.style.borderRadius = '10px';
-    toast.style.color = '#ffffff';
-    toast.style.boxShadow = '0 8px 22px rgba(0, 0, 0, 0.16)';
-    toast.style.fontSize = '0.9rem';
-    toast.style.fontWeight = '600';
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(20px)';
-    toast.style.transition = 'opacity 220ms ease, transform 220ms ease';
-
-    let backgroundColor = '#06b6d4';
-    if (type === 'success') backgroundColor = '#10b981';
-    if (type === 'warning') backgroundColor = '#f59e0b';
-    if (type === 'error') backgroundColor = '#ef4444';
-
-    toast.style.backgroundColor = backgroundColor;
-    toast.textContent = message;
-
-    container.appendChild(toast);
-
-    requestAnimationFrame(() => {
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateX(0)';
-    });
-
-    const hide = () => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateX(20px)';
-      setTimeout(() => {
-        if (toast.parentElement) toast.parentElement.removeChild(toast);
-      }, 220);
-    };
-
-    setTimeout(hide, duration);
+    list.innerHTML = visible.length
+      ? visible
+          .map((u) => {
+            const isAdmin = u.rol === 'admin';
+            const inicial = escapeHtml((u.nombre || u.email || '?').trim().charAt(0).toUpperCase());
+            return `
+        <li class="flex items-center gap-4 p-4" data-id="${escapeHtml(u.id)}">
+          <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${isAdmin ? 'bg-ciruela text-oro-claro' : 'bg-lavanda text-morado'} font-display font-bold">${inicial}</span>
+          <div class="min-w-0 grow">
+            <p class="truncate font-semibold">${escapeHtml(u.nombre || 'Sin nombre')}</p>
+            <p class="truncate text-sm text-gris">${escapeHtml(u.email || '')}</p>
+          </div>
+          ${
+            isAdmin
+              ? '<span class="badge bg-ciruela text-oro-claro">Administrador</span>'
+              : '<button type="button" data-delete class="btn btn-danger h-9 min-h-9 shrink-0 px-3 text-sm">Eliminar</button>'
+          }
+        </li>`;
+          })
+          .join('')
+      : '<li class="p-8 text-center text-gris">No hay usuarios que coincidan.</li>';
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const tbody = document.getElementById('users-tbody');
+  search.addEventListener('input', render);
 
-    async function renderUsers() {
-      if (!tbody) return;
+  list.addEventListener('click', async (e) => {
+    const btn = (e.target as HTMLElement).closest('[data-delete]');
+    const row = btn?.closest<HTMLElement>('[data-id]');
+    const user = users.find((u) => u.id === row?.dataset.id);
+    if (!user || user.rol === 'admin') return;
 
-      const users = await getUsers();
-
-      if (!users.length) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="7" class="p-10 text-center text-gray-500">
-              No hay usuarios
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      tbody.innerHTML = users
-        .map(
-          (user, index) => `
-          <tr>
-            <!-- ID bonito -->
-            <td class="p-4 font-bold">
-              ${String(index + 1).padStart(3, '0')}
-            </td>
-
-            <!-- Nombre -->
-            <td class="p-4 font-bold">
-              ${user.nombre || '-'}
-            </td>
-
-            <!-- Email -->
-            <td class="p-4">
-              ${user.email || '-'}
-            </td>
-
-        
-
-            <!-- Rol -->
-            <td class="p-4">
-              <span class="px-2 py-1 rounded bg-gray-100 text-sm">
-                ${user.rol || 'cliente'}
-              </span>
-            </td>
-
-           
-
-            <!-- Acciones -->
-            <td class="p-4 text-right">
-              <button class="delete-btn text-red-600 font-semibold" data-id="${user.id}">
-                Eliminar
-              </button>
-            </td>
-          </tr>
-        `,
-        )
-        .join('');
-
-      // 🔥 eliminar usuario
-      document.querySelectorAll('.delete-btn').forEach((btn) => {
-        btn.addEventListener('click', async (e) => {
-          const id = e.currentTarget.dataset.id;
-
-          // 🔥 obtener usuario completo
-          const user = users.find((u) => u.id === id);
-
-          // 🚫 bloquear admin
-          if (user?.rol === 'admin') {
-            showToast('No puedes eliminar un administrador', 'error');
-            return;
-          }
-
-          const confirmResult = await showConfirm(
-            'Eliminar usuario',
-            '¿Eliminar usuario? Esta acción es irreversible.',
-            'Sí, eliminar',
-            'Cancelar',
-          );
-          if (confirmResult) {
-            await deleteUser(id);
-            showToast('Usuario eliminado', 'success');
-            renderUsers();
-          }
-        });
-      });
+    const ok = await (window as any).showConfirm(
+      'Eliminar usuario',
+      `Se borrarán los datos de ${user.nombre || user.email} en la tienda. Su acceso de Firebase se elimina desde la consola de Firebase.`,
+    );
+    if (!ok) return;
+    try {
+      await deleteUser(user.id);
+      users = users.filter((u) => u.id !== user.id);
+      render();
+      showToast('Usuario eliminado', 'success');
+    } catch (error) {
+      console.error(error);
+      showToast('No se pudo eliminar el usuario.', 'error');
     }
-
-    renderUsers();
   });
+
+  async function init() {
+    await requireAdmin();
+    users = (await getUsers()).sort((a: any, b: any) =>
+      a.rol === b.rol ? String(a.nombre).localeCompare(String(b.nombre)) : a.rol === 'admin' ? -1 : 1,
+    );
+    render();
+  }
+  init();
 </script>

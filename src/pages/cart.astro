@@ -1,330 +1,188 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import CartItemTemplate from '../components/CartItem.astro'; // Using the slot trick to import a template
-import { cartStore } from '../store/cart.js';
-import { authStore } from '../store/auth.js';
-import { showToast } from '../lib/toast.js';
 ---
 
-<Layout title="Tu Carrito" description="Revisa los productos en tu carrito.">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-[60vh]">
-    <h1
-      class="text-3xl font-black text-gray-900 mb-8 tracking-tight flex items-center gap-3"
-    >
-      Tu Carrito
-      <span
-        id="header-items-count"
-        class="bg-purple-100 text-purple-700 text-lg py-1 px-3 rounded-xl font-bold border border-purple-200"
-        >0</span
-      >
-    </h1>
+<Layout title="Tu carrito" description="Revisa tu pedido y envíalo por WhatsApp.">
+  <div class="mx-auto max-w-6xl px-4 pt-8 sm:px-6 md:pt-12 lg:px-8">
+    <h1 class="text-4xl font-bold sm:text-5xl">Tu carrito</h1>
+    <p id="cart-count" class="mt-2 text-gris">&nbsp;</p>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-      <!-- Cart Items Section -->
-      <div class="lg:col-span-8">
-        <div
-          id="cart-empty"
-          class="hidden text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm"
-        >
-          <div
-            class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6"
-          >
-            <svg
-              class="w-12 h-12 text-gray-300"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              ><path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-              ></path></svg
-            >
-          </div>
-          <h3 class="text-2xl font-bold text-gray-900 mb-3">
-            Tu carrito está vacío
-          </h3>
-          <p class="text-gray-500 mb-8 max-w-sm mx-auto">
-            Parece que aún no has añadido nada. Explora nuestros productos y
-            encuentra lo que necesitas.
-          </p>
-          <a
-            href="/products"
-            class="inline-flex items-center gap-2 bg-purple-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-purple-700 transition-colors shadow-lg shadow-purple-200"
-          >
-            Ir a Productos
-          </a>
+    <div id="cart-empty" hidden class="panel mt-8 px-6 py-14 text-center">
+      <p class="font-display text-2xl font-semibold">Tu carrito está vacío</p>
+      <p class="mx-auto mt-2 max-w-sm text-gris">Agrega productos desde el catálogo y aquí verás tu pedido.</p>
+      <a href="/products" class="btn btn-primary mt-6">Ver productos</a>
+    </div>
+
+    <div id="cart-content" hidden class="mt-8 grid gap-8 lg:grid-cols-[1fr_22rem] lg:items-start">
+      <ul id="cart-items" class="panel divide-y divide-borde"></ul>
+
+      <aside class="panel p-6 lg:sticky lg:top-24">
+        <h2 class="text-xl font-bold">Resumen</h2>
+        <dl class="mt-4 space-y-2 text-gris">
+          <div class="flex justify-between"><dt>Productos</dt><dd id="summary-items">0</dd></div>
+          <div class="flex justify-between"><dt>Envío</dt><dd>Se coordina por WhatsApp</dd></div>
+        </dl>
+        <div class="mt-4 flex items-end justify-between border-t border-borde pt-4">
+          <span class="font-semibold">Total</span>
+          <span id="summary-total" class="font-display text-3xl font-bold text-morado">S/ 0.00</span>
         </div>
 
-        <div id="cart-items-container" class="space-y-4">
-          <!-- Populated by JS -->
-        </div>
-      </div>
-
-      <!-- Summary Section -->
-      <div id="cart-summary" class="lg:col-span-4 hidden">
-        <div
-          class="bg-white rounded-3xl border border-gray-100 p-8 shadow-lg shadow-gray-100/50 sticky top-24"
-        >
-          <h2
-            class="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-100"
-          >
-            Resumen del Pedido
-          </h2>
-
-          <div class="space-y-4 mb-6">
-            <div
-              class="flex justify-between items-center text-gray-600 font-medium"
-            >
-              <span>Subtotal</span>
-              <span id="summary-subtotal">S/ 0.00</span>
-            </div>
-            <div
-              class="flex justify-between items-center text-gray-600 font-medium pb-4 border-b border-gray-100"
-            >
-              <span>Envío</span>
-              <span
-                class="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded text-sm"
-                >Gratis</span
-              >
-            </div>
-            <div class="flex justify-between items-end">
-              <span class="text-lg font-bold text-gray-900">Total</span>
-              <span
-                id="summary-total"
-                class="text-3xl font-black text-purple-700 tracking-tight"
-                >S/ 0.00</span
-              >
-            </div>
+        <form id="order-form" class="mt-6 space-y-4">
+          <div>
+            <label for="telefono" class="label">Tu celular <span class="font-normal text-gris">(opcional)</span></label>
+            <input id="telefono" type="tel" inputmode="tel" autocomplete="tel" class="field" placeholder="999 999 999" />
           </div>
-
-          <button
-            id="whatsapp-btn"
-            class="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-4 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 hover:shadow-lg hover:shadow-green-200 active:scale-[0.98] mb-4"
-          >
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"
-              ><path
-                d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.245 3.483 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.347-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.876 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"
-              ></path></svg
-            >
-            Pedir por WhatsApp
+          <div>
+            <label for="direccion" class="label">Dirección o referencia <span class="font-normal text-gris">(opcional)</span></label>
+            <textarea id="direccion" rows="2" class="field resize-none" placeholder="Ej. Jr. Los Pinos 123, frente al parque"></textarea>
+          </div>
+          <button id="whatsapp-btn" type="submit" class="btn btn-whatsapp h-13 w-full text-base">
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.82 11.82 0 0 1 8.413 3.488 11.82 11.82 0 0 1 3.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.347-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.876 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"></path></svg>
+            <span data-label>Enviar pedido por WhatsApp</span>
           </button>
-
-          <p
-            class="text-xs text-gray-400 text-center flex flex-col items-center gap-2"
-          >
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              ><path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-              ></path></svg
-            >
-            Tus datos están seguros y protegidos.
+          <p id="login-hint" hidden class="text-center text-sm text-gris">
+            Necesitas iniciar sesión para enviar tu pedido.
           </p>
-        </div>
-      </div>
+        </form>
+      </aside>
     </div>
   </div>
-
-  <CartItemTemplate />
 </Layout>
 
 <script>
   import { cartStore } from '../store/cart.js';
   import { authStore } from '../store/auth.js';
+  import { createOrder } from '../lib/firebaseOrders.js';
+  import { showToast } from '../lib/toast.js';
+  import { escapeHtml, formatPrice, STORE_PHONE } from '../lib/utils.js';
 
-  // Toast function inlined to avoid import issues in static builds
-  function showToast(message, type = 'info', duration = 3200) {
-    if (typeof window === 'undefined') return;
+  const list = document.getElementById('cart-items') as HTMLElement;
+  const empty = document.getElementById('cart-empty') as HTMLElement;
+  const content = document.getElementById('cart-content') as HTMLElement;
+  const form = document.getElementById('order-form') as HTMLFormElement;
+  const submitBtn = document.getElementById('whatsapp-btn') as HTMLButtonElement;
 
-    let container = document.getElementById('global-toast-container');
+  function renderCart() {
+    const items = cartStore.items;
+    const totalItems = cartStore.getTotalItems();
 
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'global-toast-container';
-      container.style.position = 'fixed';
-      container.style.top = '1rem';
-      container.style.right = '1rem';
-      container.style.zIndex = 9999;
-      container.style.display = 'flex';
-      container.style.flexDirection = 'column';
-      container.style.gap = '0.5rem';
-      document.body.appendChild(container);
-    }
+    (document.getElementById('cart-count') as HTMLElement).textContent =
+      totalItems === 0 ? '' : totalItems === 1 ? '1 producto' : `${totalItems} productos`;
 
-    const toast = document.createElement('div');
-    toast.style.minWidth = '240px';
-    toast.style.padding = '12px 14px';
-    toast.style.borderRadius = '10px';
-    toast.style.color = '#ffffff';
-    toast.style.boxShadow = '0 8px 22px rgba(0, 0, 0, 0.16)';
-    toast.style.fontSize = '0.9rem';
-    toast.style.fontWeight = '600';
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(20px)';
-    toast.style.transition = 'opacity 220ms ease, transform 220ms ease';
+    empty.hidden = items.length > 0;
+    content.hidden = items.length === 0;
+    (document.getElementById('login-hint') as HTMLElement).hidden = authStore.isLoggedIn();
+    if (!items.length) return;
 
-    let backgroundColor = '#06b6d4';
-    if (type === 'success') backgroundColor = '#10b981';
-    if (type === 'warning') backgroundColor = '#f59e0b';
-    if (type === 'error') backgroundColor = '#ef4444';
+    list.innerHTML = items
+      .map(
+        (item: any) => `
+      <li class="flex gap-4 p-4 sm:p-5" data-id="${escapeHtml(item.id)}">
+        <div class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-lavanda sm:h-24 sm:w-24">
+          <img src="${escapeHtml(item.image)}" alt="" class="h-full w-full object-contain p-1.5 mix-blend-multiply" />
+        </div>
+        <div class="flex min-w-0 grow flex-col">
+          <div class="flex items-start justify-between gap-3">
+            <p class="line-clamp-2 font-semibold leading-snug">${escapeHtml(item.name)}</p>
+            <button type="button" data-action="remove" aria-label="Quitar ${escapeHtml(item.name)}"
+              class="-mr-2 -mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gris hover:bg-[#fdecea] hover:text-[#b42318]">
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 7h14M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>
+            </button>
+          </div>
+          <p class="text-sm text-gris">${formatPrice(item.price)} c/u</p>
+          <div class="mt-auto flex items-center justify-between pt-2">
+            <div class="flex items-center rounded-full border border-borde">
+              <button type="button" data-action="dec" aria-label="Quitar una unidad" class="flex h-9 w-9 items-center justify-center rounded-full text-lg hover:bg-lavanda">−</button>
+              <span class="w-8 text-center font-semibold" aria-live="polite">${item.quantity}</span>
+              <button type="button" data-action="inc" aria-label="Agregar una unidad" class="flex h-9 w-9 items-center justify-center rounded-full text-lg hover:bg-lavanda" ${item.quantity >= item.stock ? 'disabled' : ''}>+</button>
+            </div>
+            <p class="font-display text-lg font-bold">${formatPrice(item.price * item.quantity)}</p>
+          </div>
+        </div>
+      </li>`,
+      )
+      .join('');
 
-    toast.style.backgroundColor = backgroundColor;
-    toast.textContent = message;
-
-    container.appendChild(toast);
-
-    requestAnimationFrame(() => {
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateX(0)';
-    });
-
-    const hide = () => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateX(20px)';
-      setTimeout(() => {
-        if (toast.parentElement) toast.parentElement.removeChild(toast);
-      }, 220);
-    };
-
-    setTimeout(hide, duration);
+    (document.getElementById('summary-items') as HTMLElement).textContent = String(totalItems);
+    (document.getElementById('summary-total') as HTMLElement).textContent = formatPrice(cartStore.getTotal());
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const container = document.getElementById('cart-items-container');
-    const template = document.getElementById('cart-item-template');
-    const emptyState = document.getElementById('cart-empty');
-    const summary = document.getElementById('cart-summary');
+  list.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-action]');
+    const row = btn?.closest<HTMLElement>('[data-id]');
+    if (!btn || !row) return;
+    const item = cartStore.items.find((i: any) => i.id === row.dataset.id);
+    if (!item) return;
+    if (btn.dataset.action === 'inc') cartStore.updateQuantity(item.id, item.quantity + 1);
+    if (btn.dataset.action === 'dec') cartStore.updateQuantity(item.id, item.quantity - 1);
+    if (btn.dataset.action === 'remove') cartStore.removeItem(item.id);
+  });
 
-    function renderCart() {
-      const items = cartStore.items;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const items = cartStore.items;
+    if (!items.length) return;
 
-      const countEl = document.getElementById('header-items-count');
-      if (countEl) countEl.textContent = cartStore.getTotalItems().toString();
-
-      if (!container || !emptyState || !summary || !template) return;
-
-      if (items.length === 0) {
-        container.innerHTML = '';
-        emptyState.classList.remove('hidden');
-        summary.classList.add('hidden');
-        return;
-      }
-
-      emptyState.classList.add('hidden');
-      summary.classList.remove('hidden');
-      container.innerHTML = '';
-
-      items.forEach((item) => {
-        const clone = template.content.cloneNode(true);
-
-        const img = clone.querySelector('.item-image');
-        if (img) img.src = item.image;
-        const nameNode = clone.querySelector('.item-name');
-        if (nameNode) nameNode.textContent = item.name;
-        const priceNode = clone.querySelector('.item-price');
-        if (priceNode)
-          priceNode.textContent = `S/ ${parseFloat(item.price).toFixed(2)}`;
-        const qNode = clone.querySelector('.item-quantity');
-        if (qNode) qNode.textContent = item.quantity;
-        const subNode = clone.querySelector('.item-subtotal');
-        if (subNode)
-          subNode.textContent = `S/ ${(item.price * item.quantity).toFixed(2)}`;
-
-        // Add event listeners
-        clone.querySelector('.btn-increase')?.addEventListener('click', () => {
-          cartStore.updateQuantity(item.id, item.quantity + 1);
-        });
-
-        clone.querySelector('.btn-decrease')?.addEventListener('click', () => {
-          cartStore.updateQuantity(item.id, item.quantity - 1);
-        });
-
-        clone.querySelector('.btn-remove')?.addEventListener('click', () => {
-          cartStore.removeItem(item.id);
-        });
-
-        container.appendChild(clone);
-      });
-
-      // Update summary
-      const total = cartStore.getTotal().toFixed(2);
-      const subTotalEl = document.getElementById('summary-subtotal');
-      if (subTotalEl) subTotalEl.textContent = `S/ ${total}`;
-      const totalEl = document.getElementById('summary-total');
-      if (totalEl) totalEl.textContent = `S/ ${total}`;
+    const user = authStore.user;
+    if (!user) {
+      window.location.href = '/login?redirect=/cart';
+      return;
     }
 
-    // Setup WhatsApp Action
-    document
-      .getElementById('whatsapp-btn')
-      ?.addEventListener('click', async () => {
-        const items = cartStore.items;
+    const telefono = (document.getElementById('telefono') as HTMLInputElement).value.trim();
+    const direccion = (document.getElementById('direccion') as HTMLTextAreaElement).value.trim();
+    const nombre = user.nombre || 'Cliente';
+    const total = cartStore.getTotal();
 
-        if (items.length === 0) return;
+    let text = `¡Hola E.F.D.! Soy ${nombre}. Quiero hacer este pedido:\n\n`;
+    items.forEach((item: any) => {
+      text += `• ${item.quantity} x ${item.name} — ${formatPrice(item.price * item.quantity)}\n`;
+    });
+    text += `\n*Total: ${formatPrice(total)}*`;
+    if (telefono) text += `\nCelular: ${telefono}`;
+    if (direccion) text += `\nEntrega: ${direccion}`;
+    text += `\n\n¿Me confirman el pago y la entrega? Gracias.`;
+    const waUrl = `https://wa.me/${STORE_PHONE}?text=${encodeURIComponent(text)}`;
 
-        const user = authStore.user;
+    // La ventana se abre ANTES de esperar a Firebase: si se abre después,
+    // los navegadores de celular la bloquean y WhatsApp nunca aparecía.
+    const waWindow = window.open('', '_blank');
 
-        let nombreCliente = '';
-        if (user) {
-          nombreCliente = user.nombre || 'Cliente';
-        } else {
-          // Si no hay usuario, redirigir al login
-          window.location.href = '/login?redirect=/cart';
-          return;
-        }
+    submitBtn.disabled = true;
+    const label = submitBtn.querySelector('[data-label]') as HTMLElement;
+    label.textContent = 'Enviando pedido…';
 
-        const userName = nombreCliente;
+    const result = await createOrder({
+      usuarioId: user.id,
+      nombre,
+      email: user.email || '',
+      telefono,
+      direccion,
+      productos: items.map((item: any) => ({
+        id: item.id,
+        nombre: item.name,
+        precio: item.price,
+        cantidad: item.quantity,
+      })),
+      total,
+    });
 
-        let text = `¡Hola NaturaBio! Soy ${userName}. Me gustaría realizar el siguiente pedido:\n\n`;
+    submitBtn.disabled = false;
+    label.textContent = 'Enviar pedido por WhatsApp';
 
-        items.forEach((item) => {
-          text += `- ${item.quantity}x ${item.name} (S/ ${(item.price * item.quantity).toFixed(2)})\n`;
-        });
+    if (!result.success) {
+      waWindow?.close();
+      showToast('No se pudo guardar el pedido. Revisa tu conexión e intenta de nuevo.', 'error');
+      return;
+    }
 
-        text += `\n*TOTAL: S/ ${cartStore.getTotal().toFixed(2)}*`;
-        text += `\n\nPor favor, confirmarme los datos para el pago y envío. ¡Gracias!`;
-
-        const phone = '51975279174';
-        const encodedText = encodeURIComponent(text);
-
-        // ✅ CREAR PEDIDO EN FIRESTORE
-        // @ts-ignore
-        const { createOrder } = await import('../lib/firebaseOrders.js');
-
-        const orderData = {
-          usuarioId: user ? user.id : 'invitado',
-          nombre: nombreCliente,
-          telefono: '', // Se puede agregar después
-          productos: items.map((item) => ({
-            id: item.id,
-            nombre: item.name,
-            precio: item.price,
-            cantidad: item.quantity,
-          })),
-          total: cartStore.getTotal(),
-        };
-
-        const result = await createOrder(orderData);
-
-        if (result.success) {
-          // Limpiar carrito después de crear pedido
-          cartStore.clearCart();
-          // WhatsApp
-          window.open(`https://wa.me/${phone}?text=${encodedText}`, '_blank');
-        } else {
-          showToast('Error al crear pedido. Intenta de nuevo.', 'error');
-        }
-      });
-
-    renderCart();
-    window.addEventListener('cart_change', renderCart);
+    cartStore.clearCart();
+    if (waWindow) waWindow.location.href = waUrl;
+    else window.location.href = waUrl;
+    showToast('Pedido guardado. Termina de enviarlo en WhatsApp.', 'success', 5000);
   });
+
+  renderCart();
+  window.addEventListener('cart_change', renderCart);
+  window.addEventListener('auth_change', renderCart);
 </script>

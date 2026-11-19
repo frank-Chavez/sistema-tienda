@@ -1,303 +1,122 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import { getProducts } from '../../lib/firebaseProducts.js';
-import { getUsers } from '../../lib/firebaseUsers.js';
-import { getOrders } from '../../lib/firebaseOrders.js';
 ---
 
-<AdminLayout
-  title="Dashboard Admin"
-  description="Panel de administración de NaturaBio"
->
-  <div
-    class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-  >
-    <div>
-      <h1 class="text-3xl font-black text-gray-900 tracking-tight">
-        Dashboard
-      </h1>
-      <p class="text-gray-500 mt-1">Resumen general de tu tienda naturista.</p>
-    </div>
-    <div
-      class="bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100 flex items-center gap-3"
-    >
-      <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-      <span class="text-sm font-semibold text-gray-700">Sistema Activo</span>
-    </div>
-  </div>
+<AdminLayout title="Resumen">
+  <h1 class="text-3xl font-bold sm:text-4xl">Resumen</h1>
+  <p id="greeting" class="mt-1 text-gris">&nbsp;</p>
 
-  <!-- Stats Cards -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <!-- Total Products -->
-    <div
-      class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
-    >
-      <div class="flex justify-between items-start">
-        <div>
-          <p
-            class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1"
-          >
-            Productos
-          </p>
-          <h3 id="stat-products" class="text-3xl font-black text-gray-900">
-            0
-          </h3>
-        </div>
-        <div
-          class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center"
-        >
-          <svg
-            class="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            ><path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-            ></path></svg
-          >
-        </div>
+  <!-- El número más importante va primero y más grande -->
+  <div class="mt-6 grid gap-4 lg:grid-cols-[1.3fr_1fr]">
+    <a href="/admin/orders?estado=pendiente" class="group relative overflow-hidden rounded-[24px] bg-ciruela p-6 text-white sm:p-8">
+      <div class="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-morado-vivo/40 blur-3xl"></div>
+      <p class="relative text-white/70">Pedidos por atender</p>
+      <p id="stat-pending" class="relative mt-2 font-display text-6xl font-extrabold text-oro-claro">—</p>
+      <p class="relative mt-4 text-sm font-semibold text-white/80 group-hover:text-white">Ver pedidos pendientes</p>
+    </a>
+    <div class="grid grid-cols-2 gap-4">
+      <div class="panel p-5">
+        <p class="text-sm text-gris">Ingresos completados</p>
+        <p id="stat-revenue" class="mt-1 font-display text-2xl font-bold text-morado sm:text-3xl">—</p>
       </div>
-    </div>
-
-    <!-- Total Orders -->
-    <div
-      class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
-    >
-      <div class="flex justify-between items-start">
-        <div>
-          <p
-            class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1"
-          >
-            Pedidos
-          </p>
-          <h3 id="stat-orders" class="text-3xl font-black text-gray-900">0</h3>
-        </div>
-        <div
-          class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center"
-        >
-          <svg
-            class="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            ><path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg
-          >
-        </div>
+      <div class="panel p-5">
+        <p class="text-sm text-gris">Pedidos en total</p>
+        <p id="stat-orders" class="mt-1 font-display text-2xl font-bold sm:text-3xl">—</p>
       </div>
-    </div>
-
-    <!-- Registered Users -->
-    <div
-      class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
-    >
-      <div class="flex justify-between items-start">
-        <div>
-          <p
-            class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1"
-          >
-            Usuarios
-          </p>
-          <h3 id="stat-users" class="text-3xl font-black text-gray-900">0</h3>
-        </div>
-        <div
-          class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"
-        >
-          <svg
-            class="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            ><path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-            ></path></svg
-          >
-        </div>
+      <div class="panel p-5">
+        <p class="text-sm text-gris">Productos activos</p>
+        <p id="stat-products" class="mt-1 font-display text-2xl font-bold sm:text-3xl">—</p>
       </div>
-    </div>
-
-    <!-- Revenue (Simulated) -->
-    <div
-      class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
-    >
-      <div class="flex justify-between items-start">
-        <div>
-          <p
-            class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1"
-          >
-            Ingresos
-          </p>
-          <h3 id="stat-revenue" class="text-3xl font-black text-gray-900">
-            S/ 0
-          </h3>
-        </div>
-        <div
-          class="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center"
-        >
-          <svg
-            class="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            ><path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            ></path></svg
-          >
-        </div>
+      <div class="panel p-5">
+        <p class="text-sm text-gris">Clientes</p>
+        <p id="stat-users" class="mt-1 font-display text-2xl font-bold sm:text-3xl">—</p>
       </div>
     </div>
   </div>
 
-  <!-- Recent Orders Table (Mocked layout) -->
-  <div
-    class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-8"
-  >
-    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
-      <h3 class="text-lg font-bold text-gray-900">Últimos Pedidos</h3>
-      <a
-        href="/admin/orders"
-        class="text-purple-600 hover:text-purple-700 text-sm font-semibold transition-colors"
-        >Ver todos</a
-      >
-    </div>
-    <div class="overflow-x-auto w-full">
-      <table class="w-full text-left border-collapse">
-        <thead>
-          <tr class="bg-gray-50 text-gray-500 text-sm">
-            <th class="py-4 px-6 font-semibold">ID Pedido</th>
-            <th class="py-4 px-6 font-semibold">Cliente</th>
-            <th class="py-4 px-6 font-semibold">Fecha</th>
-            <th class="py-4 px-6 font-semibold">Total</th>
-            <th class="py-4 px-6 font-semibold text-right">Estado</th>
-          </tr>
-        </thead>
-        <tbody id="recent-orders-list" class="divide-y divide-gray-100">
-          <!-- Populated by JS -->
-          <tr
-            ><td colspan="5" class="p-8 text-center text-gray-400"
-              >Cargando datos...</td
-            ></tr
-          >
-        </tbody>
-      </table>
-    </div>
+  <div class="mt-8 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
+    <section class="panel">
+      <div class="flex items-center justify-between border-b border-borde p-5">
+        <h2 class="text-lg font-bold">Últimos pedidos</h2>
+        <a href="/admin/orders" class="text-sm font-semibold text-morado hover:underline">Ver todos</a>
+      </div>
+      <ul id="recent-orders" class="divide-y divide-borde">
+        <li class="p-5"><div class="skeleton h-10"></div></li>
+        <li class="p-5"><div class="skeleton h-10"></div></li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <div class="flex items-center justify-between border-b border-borde p-5">
+        <h2 class="text-lg font-bold">Poco stock</h2>
+        <a href="/admin/products" class="text-sm font-semibold text-morado hover:underline">Ver productos</a>
+      </div>
+      <ul id="low-stock" class="divide-y divide-borde">
+        <li class="p-5"><div class="skeleton h-10"></div></li>
+      </ul>
+    </section>
   </div>
 </AdminLayout>
 
 <script>
+  import { requireAdmin } from '../../lib/adminGuard.js';
   import { getProducts } from '../../lib/firebaseProducts.js';
   import { getUsers } from '../../lib/firebaseUsers.js';
   import { getOrders } from '../../lib/firebaseOrders.js';
+  import { escapeHtml, formatPrice, formatDate } from '../../lib/utils.js';
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    const statProducts = document.getElementById('stat-products');
-    const statUsers = document.getElementById('stat-users');
-    const statOrders = document.getElementById('stat-orders');
-    const statRevenue = document.getElementById('stat-revenue');
-    const tbody = document.getElementById('recent-orders-list');
+  const $ = (id: string) => document.getElementById(id) as HTMLElement;
 
-    const products = await getProducts();
-    const users = await getUsers();
-    const orders = await getOrders();
+  async function init() {
+    const user: any = await requireAdmin();
+    $('greeting').textContent = `Hola, ${(user?.nombre || '').split(' ')[0]}. Así va tu tienda.`;
 
-    // =========================
-    // STATS
-    // =========================
-    statProducts.textContent = products.length;
-    statUsers.textContent = users.length;
-    statOrders.textContent = orders.length;
+    const [products, users, orders]: any[] = await Promise.all([getProducts(), getUsers(), getOrders()]);
 
-    // ✅ INGRESOS SOLO COMPLETADOS (usar "estado")
-    const revenue = orders
-      .filter((o) => (o.estado || '').toLowerCase() === 'completado')
-      .reduce((sum, o) => sum + Number(o.total || 0), 0);
+    const estado = (o: any) => (o.estado || 'pendiente').toLowerCase();
+    $('stat-pending').textContent = String(orders.filter((o: any) => estado(o) === 'pendiente').length);
+    $('stat-orders').textContent = String(orders.length);
+    $('stat-products').textContent = String(products.filter((p: any) => p.estado === 'activo').length);
+    $('stat-users').textContent = String(users.filter((u: any) => u.rol !== 'admin').length);
+    $('stat-revenue').textContent = formatPrice(
+      orders.filter((o: any) => estado(o) === 'completado').reduce((s: number, o: any) => s + Number(o.total || 0), 0),
+    );
 
-    statRevenue.textContent = `S/ ${revenue.toFixed(2)}`;
+    const recent = [...orders].sort((a, b) => (b.fecha?.seconds || 0) - (a.fecha?.seconds || 0)).slice(0, 5);
+    $('recent-orders').innerHTML = recent.length
+      ? recent
+          .map(
+            (o: any) => `
+        <li class="flex items-center justify-between gap-4 p-5">
+          <div class="min-w-0">
+            <p class="truncate font-semibold">${escapeHtml(o.nombre || o.clienteNombre || 'Cliente')}</p>
+            <p class="text-sm text-gris">${formatDate(o.fecha)}</p>
+          </div>
+          <div class="text-right">
+            <p class="font-display font-bold">${formatPrice(o.total)}</p>
+            <span class="badge badge-${estado(o)}">${escapeHtml(estado(o))}</span>
+          </div>
+        </li>`,
+          )
+          .join('')
+      : '<li class="p-8 text-center text-gris">Todavía no hay pedidos.</li>';
 
-    // =========================
-    // ÚLTIMOS PEDIDOS
-    // =========================
-    if (!orders.length) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="5" class="py-8 text-center text-gray-500">
-            No hay pedidos recientes
-          </td>
-        </tr>
-      `;
-      return;
-    }
+    const low = products
+      .filter((p: any) => Number(p.stock) <= 5)
+      .sort((a: any, b: any) => Number(a.stock) - Number(b.stock))
+      .slice(0, 6);
+    $('low-stock').innerHTML = low.length
+      ? low
+          .map(
+            (p: any) => `
+        <li class="flex items-center justify-between gap-4 p-5">
+          <p class="min-w-0 truncate font-medium">${escapeHtml(p.nombre)}</p>
+          <span class="badge ${Number(p.stock) === 0 ? 'badge-cancelado' : 'badge-pendiente'}">${Number(p.stock) === 0 ? 'Agotado' : `${p.stock} unid.`}</span>
+        </li>`,
+          )
+          .join('')
+      : '<li class="p-8 text-center text-gris">Todos los productos tienen buen stock.</li>';
+  }
 
-    // 🔥 ordenar por fecha real (firebase)
-    const recent = [...orders]
-      .sort((a, b) => {
-        const fechaA = a.fecha?.seconds || 0;
-        const fechaB = b.fecha?.seconds || 0;
-        return fechaB - fechaA;
-      })
-      .slice(0, 5);
-
-    tbody.innerHTML = recent
-      .map(
-        (order, index) => `
-        <tr class="hover:bg-gray-50">
-          
-          <!-- ✅ ID igual que pedidos -->
-          <td class="py-4 px-6 font-semibold">
-            ${String(index + 1).padStart(3, '0')}
-          </td>
-
-          <!-- ✅ NOMBRE REAL -->
-          <td class="py-4 px-6">
-            ${order.clienteNombre || 'Sin nombre'}
-          </td>
-
-          <!-- ✅ FECHA REAL -->
-          <td class="py-4 px-6">
-            ${
-              order.fecha?.seconds
-                ? new Date(order.fecha.seconds * 1000).toLocaleDateString()
-                : '-'
-            }
-          </td>
-
-          <!-- ✅ TOTAL -->
-          <td class="py-4 px-6 font-bold">
-            S/ ${(Number(order.total) || 0).toFixed(2)}
-          </td>
-
-          <!-- ✅ ESTADO REAL -->
-          <td class="py-4 px-6 text-right">
-            <span class="px-3 py-1 rounded-lg text-xs font-bold
-              ${getStatusClass(order.estado)}">
-              ${order.estado || 'pendiente'}
-            </span>
-          </td>
-
-        </tr>
-      `,
-      )
-      .join('');
-
-    // =========================
-    function getStatusClass(estado) {
-      const s = (estado || '').toLowerCase();
-
-      if (s === 'completado') return 'bg-green-100 text-green-700';
-      if (s === 'cancelado') return 'bg-red-100 text-red-700';
-      return 'bg-yellow-100 text-yellow-700';
-    }
-  });
+  init();
 </script>

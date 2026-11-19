@@ -1,0 +1,43 @@
+rules_version = '2';
+
+// PROPUESTA de reglas de seguridad para Firestore (todavía NO están publicadas).
+// Revisa y publícalas desde la consola de Firebase > Firestore > Reglas.
+//
+// Por qué: hoy la app decide quién es admin en el navegador. Sin reglas como
+// estas, cualquier persona con la consola del navegador podría ponerse
+// rol "admin" en su documento o borrar productos y pedidos.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isAdmin() {
+      return signedIn() &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol == 'admin';
+    }
+
+    // Catálogo: todos pueden ver; solo admin modifica.
+    match /productos/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /categorias/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Usuarios: cada uno crea/lee su perfil, pero no puede darse rol admin.
+    match /usuarios/{uid} {
+      allow read: if (signedIn() && request.auth.uid == uid) || isAdmin();
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.rol == 'cliente';
+      allow update: if isAdmin() || (signedIn() && request.auth.uid == uid
+        && request.resource.data.rol == resource.data.rol);
+      allow delete: if isAdmin();
+    }
+
+    // Pedidos: el cliente crea los suyos; el admin los gestiona.
+    match /pedidos/{id} {
+      allow create: if signedIn() && request.resource.data.usuarioId == request.auth.uid;
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

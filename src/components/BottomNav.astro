@@ -1,0 +1,71 @@
+---
+// Barra inferior para celular: lo importante queda al alcance del pulgar.
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const items = [
+  {
+    href: '/',
+    label: 'Inicio',
+    icon: 'M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1v-8.5Z',
+  },
+  {
+    href: '/products',
+    label: 'Productos',
+    icon: 'M4 5h7v7H4V5Zm9 0h7v7h-7V5ZM4 14h7v6H4v-6Zm9 0h7v6h-7v-6Z',
+  },
+  {
+    href: '/cart',
+    label: 'Carrito',
+    icon: 'M5 7h14l-1.2 11.1a2 2 0 0 1-2 1.9H8.2a2 2 0 0 1-2-1.9L5 7Zm4 0V6a3 3 0 0 1 6 0v1',
+    badge: true,
+  },
+  {
+    href: 'https://wa.me/51975279174?text=Hola%2C%20quisiera%20informaci%C3%B3n%20sobre%20sus%20productos.',
+    label: 'WhatsApp',
+    icon: 'M12 3.5a8.5 8.5 0 0 0-7.3 12.8L3.5 20.5l4.3-1.1A8.5 8.5 0 1 0 12 3.5Zm-3 5c.3-.6.6-.6.9-.6h.6c.2 0 .4 0 .6.5l.8 1.9c.1.2.1.4 0 .6l-.6.8c-.1.2-.1.3 0 .5.6 1 1.4 1.8 2.5 2.4.2.1.4.1.5 0l.8-.9c.2-.2.4-.2.6-.1l1.9.9c.2.1.3.2.3.4 0 .7-.4 1.6-1.2 1.9-1 .4-2.6.2-4.6-1.3-1.6-1.2-2.7-2.9-3-3.9-.3-1-.1-2.2.5-2.6Z',
+    external: true,
+  },
+];
+---
+
+<nav
+  class="fixed inset-x-0 bottom-0 z-50 border-t border-borde bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
+  aria-label="Navegación rápida"
+>
+  <ul class="grid grid-cols-4">
+    {
+      items.map((item) => {
+        const active = !item.external && path === item.href;
+        return (
+          <li>
+            <a
+              href={item.href}
+              target={item.external ? '_blank' : undefined}
+              rel={item.external ? 'noopener' : undefined}
+              aria-current={active ? 'page' : undefined}
+              class={`relative flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors ${
+                active ? 'text-morado' : 'text-gris'
+              }`}
+            >
+              {active && <span class="absolute top-0 h-[3px] w-8 rounded-b-full bg-oro" />}
+              <span class="relative">
+                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+                  <path d={item.icon} />
+                </svg>
+                {item.badge && (
+                  <span
+                    data-cart-badge
+                    hidden
+                    class="absolute -right-2.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-oro px-1 text-[10px] font-bold text-ciruela"
+                  >
+                    0
+                  </span>
+                )}
+              </span>
+              {item.label}
+            </a>
+          </li>
+        );
+      })
+    }
+  </ul>
+</nav>

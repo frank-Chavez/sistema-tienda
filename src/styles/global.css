@@ -1,16 +1,341 @@
 @import 'tailwindcss';
 
+/*
+  Sistema visual E.F.D.
+  Los colores salen de la imagen del Niño Dios de Pumarume:
+  terciopelo morado + bordado dorado.
+*/
 @theme {
-  --animate-fade-in: fade-in 0.5s ease-out;
+  --color-ciruela: #2a0e4f; /* morado terciopelo profundo (fondos oscuros) */
+  --color-ciruela-2: #3b1670;
+  --color-morado: #5b21b6; /* morado principal: botones, precios */
+  --color-morado-vivo: #7c3aed; /* hover y enlaces */
+  --color-lavanda: #efe7fb; /* superficies suaves */
+  --color-niebla: #fbf9fe; /* fondo de página */
+  --color-tinta: #1e1530; /* texto */
+  --color-gris: #6b6180; /* texto secundario */
+  --color-borde: #e6ddf3;
+  --color-oro: #d9a93f; /* bordado dorado: detalles puntuales */
+  --color-oro-claro: #f3dc9f;
+  --color-hoja: #2f7a4f; /* en stock / éxito */
 
-  @keyframes fade-in {
+  --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+
+  --animate-rise: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+
+  @keyframes rise {
     from {
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(14px);
     }
     to {
       opacity: 1;
-      transform: translateY(0);
+      transform: none;
     }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-niebla);
+    color: var(--color-tinta);
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-morado-vivo);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  ::selection {
+    background: var(--color-oro-claro);
+    color: var(--color-ciruela);
+  }
+}
+
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0 1.25rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition:
+      background-color 160ms ease,
+      color 160ms ease,
+      transform 120ms ease,
+      box-shadow 160ms ease;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn-primary {
+    background: var(--color-morado);
+    color: #fff;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--color-ciruela-2);
+  }
+  .btn-gold {
+    background: var(--color-oro);
+    color: var(--color-ciruela);
+  }
+  .btn-gold:hover {
+    background: var(--color-oro-claro);
+  }
+  .btn-soft {
+    background: var(--color-lavanda);
+    color: var(--color-morado);
+  }
+  .btn-soft:hover {
+    background: #e2d5f7;
+  }
+  .btn-outline {
+    border: 1px solid var(--color-borde);
+    background: #fff;
+    color: var(--color-tinta);
+  }
+  .btn-outline:hover {
+    border-color: var(--color-morado-vivo);
+    color: var(--color-morado);
+  }
+  .btn-danger {
+    background: #fdecea;
+    color: #b42318;
+  }
+  .btn-danger:hover {
+    background: #fbd5d0;
+  }
+  .btn-whatsapp {
+    background: #1fa855;
+    color: #fff;
+  }
+  .btn-whatsapp:hover {
+    background: #178a45;
+  }
+
+  .field {
+    display: block;
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--color-borde);
+    border-radius: 14px;
+    background: #fff;
+    color: var(--color-tinta);
+    font-size: 1rem; /* 16px evita el zoom automático en iPhone */
+    transition:
+      border-color 160ms ease,
+      box-shadow 160ms ease;
+  }
+  .field::placeholder {
+    color: #a89fb8;
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--color-morado-vivo);
+    box-shadow: 0 0 0 4px rgb(124 58 237 / 0.14);
+  }
+  .label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-tinta);
+  }
+
+  .panel {
+    background: #fff;
+    border: 1px solid var(--color-borde);
+    border-radius: 22px;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.4rem;
+    padding: 0 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-borde);
+    background: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-gris);
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color 160ms ease,
+      color 160ms ease,
+      border-color 160ms ease;
+  }
+  .chip:hover {
+    color: var(--color-morado);
+    border-color: #cdb8f0;
+  }
+  .chip[aria-pressed='true'] {
+    background: var(--color-ciruela);
+    border-color: var(--color-ciruela);
+    color: #fff;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .badge-pendiente {
+    background: #fdf3d8;
+    color: #8a5a00;
+  }
+  .badge-completado {
+    background: #e3f3e8;
+    color: var(--color-hoja);
+  }
+  .badge-cancelado {
+    background: #fdecea;
+    color: #b42318;
+  }
+
+  .skeleton {
+    background: linear-gradient(90deg, #f1ebf9 0%, #f8f4fd 50%, #f1ebf9 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s linear infinite;
+    border-radius: 18px;
+  }
+  @keyframes shimmer {
+    to {
+      background-position: -200% 0;
+    }
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Avisos (toasts) */
+  .toast-stack {
+    position: fixed;
+    z-index: 9999;
+    left: 1rem;
+    right: 1rem;
+    bottom: calc(5.5rem + env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    pointer-events: none;
+  }
+  @media (min-width: 768px) {
+    .toast-stack {
+      left: auto;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      align-items: flex-end;
+    }
+  }
+  .toast {
+    pointer-events: auto;
+    max-width: 26rem;
+    padding: 0.8rem 1.1rem;
+    border-radius: 14px;
+    color: #fff;
+    font-size: 0.92rem;
+    font-weight: 600;
+    box-shadow: 0 12px 30px -10px rgb(42 14 79 / 0.5);
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+      opacity 220ms ease,
+      transform 220ms ease;
+    cursor: pointer;
+  }
+  .toast-in {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Modales */
+  .modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    background: rgb(30 21 48 / 0.55);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: opacity 200ms ease;
+  }
+  .modal[hidden] {
+    display: none;
+  }
+  .modal.is-open {
+    opacity: 1;
+  }
+  .modal-sheet {
+    width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 24px 24px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    transform: translateY(24px);
+    transition: transform 240ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .modal.is-open .modal-sheet {
+    transform: none;
+  }
+  @media (min-width: 640px) {
+    .modal {
+      align-items: center;
+      padding: 1rem;
+    }
+    .modal-sheet {
+      max-width: 34rem;
+      border-radius: 24px;
+      transform: translateY(8px) scale(0.98);
+    }
+    .modal-sheet.modal-wide {
+      max-width: 42rem;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

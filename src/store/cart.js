@@ -35,26 +35,31 @@ class CartStore extends EventTarget {
     }
   }
 
+  /** Devuelve true si se agregó al menos una unidad. */
   addItem(product, quantity = 1) {
+    const maxStock = Number(product.stock) || 0;
     const existingItem = this.items.find((item) => item.id === product.id);
+    const current = existingItem ? existingItem.quantity : 0;
+
+    if (current >= maxStock) {
+      showToast(
+        maxStock === 0
+          ? 'Este producto está agotado'
+          : `Solo quedan ${maxStock} unidades y ya están en tu carrito`,
+        'warning',
+      );
+      return false;
+    }
+
+    const next = Math.min(current + quantity, maxStock);
     if (existingItem) {
-      const newQuantity = existingItem.quantity + quantity;
-      const maxStock = product.stock || 0;
-      existingItem.quantity = Math.min(newQuantity, maxStock);
-      if (newQuantity > maxStock) {
-        showToast('Stock máximo alcanzado', 'warning');
-      }
+      existingItem.quantity = next;
+      existingItem.stock = maxStock;
     } else {
-      const maxStock = product.stock || 0;
-      const addQuantity = Math.min(quantity, maxStock);
-      if (addQuantity > 0) {
-        this.items.push({ ...product, quantity: addQuantity });
-      }
-      if (quantity > maxStock) {
-        showToast('Stock máximo alcanzado', 'warning');
-      }
+      this.items.push({ ...product, quantity: next });
     }
     this.saveCart();
+    return true;
   }
 
   removeItem(productId) {
@@ -73,7 +78,7 @@ class CartStore extends EventTarget {
       const maxStock = item.stock || 0;
       item.quantity = Math.min(quantity, maxStock);
       if (quantity > maxStock) {
-        showToast('Stock máximo alcanzado', 'warning');
+        showToast(`Solo hay ${maxStock} unidades disponibles`, 'warning');
       }
       this.saveCart();
     }

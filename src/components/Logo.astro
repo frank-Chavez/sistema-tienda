@@ -1,0 +1,20 @@
+---
+// Marca E.F.D.: un arco (como la hornacina de la imagen del inicio)
+// en morado con filete dorado.
+interface Props {
+  light?: boolean;
+  class?: string;
+}
+const { light = false, class: className = '' } = Astro.props;
+---
+
+<a href="/" class={`group inline-flex items-center gap-2.5 ${className}`} aria-label="E.F.D. — ir al inicio">
+  <svg width="30" height="36" viewBox="0 0 30 36" aria-hidden="true" class="shrink-0">
+    <path d="M1 35V15C1 7.3 7.3 1 15 1s14 6.3 14 14v20H1z" fill={light ? '#ffffff' : '#5b21b6'} />
+    <path d="M5 32V15.5C5 9.7 9.5 5 15 5s10 4.7 10 10.5V32" fill="none" stroke="#d9a93f" stroke-width="1.4" />
+    <text x="15" y="27" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="700" font-size="15" fill={light ? '#2a0e4f' : '#ffffff'}>E</text>
+  </svg>
+  <span class={`font-display text-xl font-bold tracking-tight ${light ? 'text-white' : 'text-tinta'}`}>
+    E.F.D.
+  </span>
+</a>

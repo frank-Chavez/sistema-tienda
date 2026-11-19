@@ -1,0 +1,28 @@
+---
+// Marco compartido por Iniciar sesión y Registro.
+interface Props {
+  heading: string;
+}
+const { heading } = Astro.props;
+---
+
+<div class="mx-auto grid max-w-5xl gap-0 px-4 py-8 sm:px-6 md:py-14 lg:grid-cols-2">
+  <div class="relative hidden overflow-hidden rounded-l-[28px] bg-ciruela p-10 text-white lg:flex lg:flex-col lg:justify-end">
+    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_30%,rgba(124,58,237,0.5),transparent_70%)]"></div>
+    <img
+      src="/Niño Dios de Pumarume.png"
+      alt=""
+      width="594"
+      height="420"
+      class="relative mx-auto -mb-4 w-[115%] max-w-none drop-shadow-[0_24px_30px_rgba(20,5,40,0.55)]"
+    />
+    <p class="relative mt-8 font-display text-2xl font-semibold leading-snug">
+      Tus pedidos y tu carrito, guardados en tu cuenta.
+    </p>
+  </div>
+
+  <div class="panel p-6 sm:p-10 lg:rounded-l-none lg:rounded-r-[28px]">
+    <h1 class="text-3xl font-bold sm:text-4xl">{heading}</h1>
+    <slot />
+  </div>
+</div>

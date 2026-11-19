@@ -1,309 +1,225 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import ConfirmModal from '../../components/ConfirmModal.astro';
-import { showToast } from '../../lib/toast.js';
-import {
-  getOrders,
-  updateOrderStatus,
-  deleteOrder,
-} from '../../lib/firebaseOrders.js';
-import { updateStock } from '../../lib/firebaseProducts.js';
 ---
 
-<AdminLayout
-  title="Gestión de Pedidos"
-  description="Administra los pedidos de tus clientes"
->
-  <div>
-    <div class="mb-8">
-      <h1 class="text-3xl font-black text-gray-900 tracking-tight">
-        Pedidos Recientes
-      </h1>
-      <p class="text-gray-500 mt-1">
-        Revisa y actualiza el estado de los pedidos generados vía WhatsApp.
-      </p>
-    </div>
+<AdminLayout title="Pedidos">
+  <h1 class="text-3xl font-bold sm:text-4xl">Pedidos</h1>
+  <p class="mt-1 text-gris">Pedidos enviados por WhatsApp. Al marcar uno como completado se descuenta el stock.</p>
 
-    <!-- Orders Table -->
-    <div
-      class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden min-h-[50vh]"
-    >
-      <div class="overflow-x-auto w-full">
-        <table class="w-full text-left border-collapse min-w-200">
-          <thead>
-            <tr
-              class="bg-gray-50 text-gray-500 text-sm border-b border-gray-100"
-            >
-              <th class="py-4 px-6 font-semibold w-24">ID</th>
-              <th class="py-4 px-6 font-semibold">Cliente</th>
-              <th class="py-4 px-6 font-semibold w-32">Fecha</th>
-              <th class="py-4 px-6 font-semibold w-24">Total</th>
-              <th class="py-4 px-6 font-semibold w-40">Estado</th>
-              <th class="py-4 px-6 font-semibold w-32 text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody
-            id="orders-tbody"
-            class="divide-y divide-gray-100 align-middle text-gray-700"
-          >
-            <!-- Populated by JS -->
-          </tbody>
-        </table>
+  <div id="status-filter" class="no-scrollbar mt-6 flex gap-2 overflow-x-auto" role="group" aria-label="Filtrar por estado">
+    <button type="button" class="chip" data-estado="todos">Todos</button>
+    <button type="button" class="chip" data-estado="pendiente">Pendientes</button>
+    <button type="button" class="chip" data-estado="completado">Completados</button>
+    <button type="button" class="chip" data-estado="cancelado">Cancelados</button>
+  </div>
+
+  <ul id="orders-list" class="mt-5 space-y-3">
+    <li class="skeleton h-24"></li>
+    <li class="skeleton h-24"></li>
+    <li class="skeleton h-24"></li>
+  </ul>
+
+  <div id="order-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="order-modal-title">
+    <div class="modal-sheet modal-wide">
+      <div class="flex items-center justify-between border-b border-borde p-5 sm:p-6">
+        <h2 id="order-modal-title" class="text-2xl font-bold">Detalle del pedido</h2>
+        <button type="button" data-close aria-label="Cerrar" class="flex h-10 w-10 items-center justify-center rounded-full hover:bg-lavanda">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+        </button>
       </div>
+      <div id="order-detail" class="p-5 sm:p-6"></div>
     </div>
-
-    <!-- Order Details Modal -->
-    <div
-      id="order-modal"
-      class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300"
-    >
-      <div
-        class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl transform scale-95 transition-transform duration-300 overflow-hidden"
-        id="order-modal-content"
-      >
-        <div
-          class="p-6 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10"
-        >
-          <h2 class="text-2xl font-black text-gray-900">Detalles del Pedido</h2>
-          <button
-            id="close-order-modal"
-            class="text-gray-400 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <svg
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              ><path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"></path></svg
-            >
-          </button>
-        </div>
-        <div
-          class="p-6 sm:p-8 max-h-[70vh] overflow-y-auto"
-          id="order-details-body"
-        >
-          <!-- Populated by JS -->
-        </div>
-        <div class="p-6 border-t border-gray-100 flex justify-end bg-gray-50">
-          <button
-            id="print-order"
-            class="px-6 py-2 rounded-xl font-bold bg-purple-600 text-white hover:bg-purple-700 transition-all active:scale-95 flex items-center gap-2"
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              ><path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-              ></path></svg
-            >
-            Imprimir Recibo
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <ConfirmModal id="delete-order-modal" />
   </div>
 </AdminLayout>
 
 <script>
-  import {
-    getOrders,
-    updateOrderStatus,
-    deleteOrder,
-  } from '../../lib/firebaseOrders.js';
-  import { updateStock } from '../../lib/firebaseProducts.js';
+  import { requireAdmin } from '../../lib/adminGuard.js';
+  import { getOrders, updateOrderStatus, deleteOrder } from '../../lib/firebaseOrders.js';
+  import { showToast } from '../../lib/toast.js';
+  import { openModal, wireModal } from '../../lib/modal.js';
+  import { escapeHtml, formatPrice, formatDate } from '../../lib/utils.js';
 
-  // Toast function inlined to avoid import issues in static builds
-  function showToast(message, type = 'info', duration = 3200) {
-    if (typeof window === 'undefined') return;
+  const list = document.getElementById('orders-list') as HTMLElement;
+  const filter = document.getElementById('status-filter') as HTMLElement;
+  const modal = document.getElementById('order-modal') as HTMLElement;
+  const detail = document.getElementById('order-detail') as HTMLElement;
+  wireModal(modal);
 
-    let container = document.getElementById('global-toast-container');
+  let orders: any[] = [];
+  let selected = new URLSearchParams(location.search).get('estado') || 'todos';
 
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'global-toast-container';
-      container.style.position = 'fixed';
-      container.style.top = '1rem';
-      container.style.right = '1rem';
-      container.style.zIndex = 9999;
-      container.style.display = 'flex';
-      container.style.flexDirection = 'column';
-      container.style.gap = '0.5rem';
-      document.body.appendChild(container);
-    }
+  const estado = (o: any) => (o.estado || 'pendiente').toLowerCase();
+  const cliente = (o: any) => o.nombre || o.clienteNombre || 'Cliente';
+  const telefono = (o: any) => o.telefono || o.clienteTelefono || '';
+  const productos = (o: any) => (Array.isArray(o.productos) ? o.productos : []);
+  const waLink = (phone: string) => {
+    let digits = phone.replace(/\D/g, '');
+    if (digits.length === 9) digits = '51' + digits;
+    return `https://wa.me/${digits}`;
+  };
 
-    const toast = document.createElement('div');
-    toast.style.minWidth = '240px';
-    toast.style.padding = '12px 14px';
-    toast.style.borderRadius = '10px';
-    toast.style.color = '#ffffff';
-    toast.style.boxShadow = '0 8px 22px rgba(0, 0, 0, 0.16)';
-    toast.style.fontSize = '0.9rem';
-    toast.style.fontWeight = '600';
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(20px)';
-    toast.style.transition = 'opacity 220ms ease, transform 220ms ease';
-
-    let backgroundColor = '#06b6d4';
-    if (type === 'success') backgroundColor = '#10b981';
-    if (type === 'warning') backgroundColor = '#f59e0b';
-    if (type === 'error') backgroundColor = '#ef4444';
-
-    toast.style.backgroundColor = backgroundColor;
-    toast.textContent = message;
-
-    container.appendChild(toast);
-
-    requestAnimationFrame(() => {
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateX(0)';
-    });
-
-    const hide = () => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateX(20px)';
-      setTimeout(() => {
-        if (toast.parentElement) toast.parentElement.removeChild(toast);
-      }, 220);
-    };
-
-    setTimeout(hide, duration);
+  function statusSelect(o: any) {
+    const opts = [
+      ['pendiente', 'Pendiente'],
+      ['completado', 'Completado'],
+      ['cancelado', 'Cancelado'],
+    ];
+    return `
+      <label class="sr-only" for="st-${escapeHtml(o.id)}">Estado</label>
+      <select id="st-${escapeHtml(o.id)}" data-status="${escapeHtml(o.id)}" class="field h-10 min-h-10 w-auto rounded-full py-1 pl-3 pr-8 text-sm font-semibold">
+        ${opts.map(([v, l]) => `<option value="${v}" ${estado(o) === v ? 'selected' : ''}>${l}</option>`).join('')}
+      </select>`;
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const tbody = document.getElementById('orders-tbody');
+  function render() {
+    filter.querySelectorAll<HTMLElement>('[data-estado]').forEach((c) =>
+      c.setAttribute('aria-pressed', String(c.dataset.estado === selected)),
+    );
 
-    async function renderTable() {
-      const orders = await getOrders();
-
-      if (!orders.length) {
-        tbody.innerHTML = `
-        <tr>
-          <td colspan="6" class="py-8 text-center text-gray-500">
-            No hay pedidos
-          </td>
-        </tr>
-      `;
-        return;
-      }
-
-      tbody.innerHTML = orders
-        .map((order, index) => {
-          return `
-      <tr>
-        <td class="py-4 px-6 font-bold">
-          ${String(index + 1).padStart(3, '0')}
-        </td>
-
-        <td class="py-4 px-6">
-          <div class="font-bold">${order.clienteNombre}</div>
-          <div class="text-xs text-gray-500">${order.clienteTelefono}</div>
-        </td>
-
-        <td class="py-4 px-6 text-sm">
-          ${new Date(order.fecha.seconds * 1000).toLocaleDateString()}
-        </td>
-
-        <td class="py-4 px-6 font-bold text-purple-700">
-          S/ ${order.total || 0}
-        </td>
-
-        <td class="py-4 px-6">
-          <select data-id="${order.id}" class="status-select px-2 py-1 border rounded">
-            <option value="pendiente" ${order.estado === 'pendiente' ? 'selected' : ''}>Pendiente</option>
-            <option value="completado" ${order.estado === 'completado' ? 'selected' : ''}>Completado</option>
-            <option value="cancelado" ${order.estado === 'cancelado' ? 'selected' : ''}>Cancelado</option>
-          </select>
-        </td>
-
-        <td class="py-4 px-6 text-right space-x-2">
-          <button class="view-btn text-blue-600" data-id="${order.id}">
-            Ver
-          </button>
-
-          <button class="delete-btn text-red-600" data-id="${order.id}">
-            Eliminar
-          </button>
-        </td>
-      </tr>
-      `;
-        })
-        .join('');
-
-      // =====================
-      // CAMBIAR ESTADO
-      // =====================
-      document.querySelectorAll('.status-select').forEach((select) => {
-        select.addEventListener('change', async (e) => {
-          const id = e.target.dataset.id;
-          const estado = e.target.value;
-
-          await updateOrderStatus(id, estado);
-
-          // Si completado, restar stock
-          if (estado === 'completado') {
-            const order = orders.find((o) => o.id === id);
-            if (order && order.productos) {
-              for (const producto of order.productos) {
-                await updateStock(producto.id, producto.cantidad);
-              }
-            }
-          }
-
-          renderTable();
-        });
-      });
-
-      // =====================
-      // ELIMINAR
-      // =====================
-      document.querySelectorAll('.delete-btn').forEach((btn) => {
-        btn.addEventListener('click', async (e) => {
-          const id = e.target.dataset.id;
-
-          const confirmResult = await showConfirm(
-            'Eliminar pedido',
-            '¿Eliminar pedido? Esta acción es irreversible.',
-            'Sí, eliminar',
-            'Cancelar',
-          );
-          if (confirmResult) {
-            await deleteOrder(id);
-            showToast('Pedido eliminado', 'success');
-            renderTable();
-          }
-        });
-      });
-
-      // =====================
-      // VER DETALLE
-      // =====================
-      document.querySelectorAll('.view-btn').forEach((btn) => {
-        btn.addEventListener('click', (e) => {
-          const id = e.target.dataset.id;
-          const order = orders.find((o) => o.id === id);
-
-          if (!order) return;
-
-          showToast(
-            `Cliente: ${order.clienteNombre} · Teléfono: ${order.clienteTelefono} · Dirección: ${order.direccion} · Total: S/ ${order.total} · Productos: ${order.productos.join(', ')}`,
-            'info',
-            6000,
-          );
-        });
-      });
+    const visible = orders.filter((o) => selected === 'todos' || estado(o) === selected);
+    if (!visible.length) {
+      list.innerHTML = `<li class="panel p-10 text-center text-gris">${
+        orders.length ? 'No hay pedidos con este estado.' : 'Todavía no hay pedidos.'
+      }</li>`;
+      return;
     }
 
-    renderTable();
+    list.innerHTML = visible
+      .map((o) => {
+        const items = productos(o);
+        const resumen = items
+          .slice(0, 3)
+          .map((p: any) => `${p.cantidad} x ${p.nombre}`)
+          .join(', ');
+        return `
+      <li class="panel p-4 sm:p-5" data-id="${escapeHtml(o.id)}">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div class="min-w-0">
+            <p class="font-semibold">${escapeHtml(cliente(o))}</p>
+            <p class="text-sm text-gris">${formatDate(o.fecha)}${telefono(o) ? ` · ${escapeHtml(telefono(o))}` : ''}</p>
+          </div>
+          <p class="font-display text-xl font-bold text-morado">${formatPrice(o.total)}</p>
+        </div>
+        <p class="mt-2 line-clamp-1 text-sm text-gris">${escapeHtml(resumen)}${items.length > 3 ? ` y ${items.length - 3} más` : ''}</p>
+        <div class="mt-4 flex flex-wrap items-center gap-2">
+          ${statusSelect(o)}
+          <button type="button" data-view class="btn btn-soft h-10 min-h-10 px-4 text-sm">Ver detalle</button>
+          <button type="button" data-delete class="btn btn-danger ml-auto h-10 min-h-10 px-4 text-sm">Eliminar</button>
+        </div>
+      </li>`;
+      })
+      .join('');
+  }
+
+  function showDetail(o: any) {
+    const items = productos(o);
+    const phone = telefono(o);
+    detail.innerHTML = `
+      <dl class="grid gap-4 sm:grid-cols-2">
+        <div><dt class="text-sm text-gris">Cliente</dt><dd class="font-semibold">${escapeHtml(cliente(o))}</dd></div>
+        <div><dt class="text-sm text-gris">Fecha</dt><dd class="font-semibold">${formatDate(o.fecha)}</dd></div>
+        <div><dt class="text-sm text-gris">Celular</dt><dd class="font-semibold">${phone ? escapeHtml(phone) : 'No lo indicó'}</dd></div>
+        <div><dt class="text-sm text-gris">Estado</dt><dd><span class="badge badge-${estado(o)}">${escapeHtml(estado(o))}</span></dd></div>
+        <div class="sm:col-span-2"><dt class="text-sm text-gris">Dirección o referencia</dt><dd class="font-semibold">${escapeHtml(o.direccion || 'No la indicó')}</dd></div>
+      </dl>
+      <ul class="mt-6 divide-y divide-borde rounded-2xl border border-borde">
+        ${items
+          .map(
+            (p: any) => `
+          <li class="flex justify-between gap-4 p-4">
+            <span>${Number(p.cantidad) || 0} x ${escapeHtml(p.nombre)}</span>
+            <span class="font-semibold">${formatPrice((Number(p.precio) || 0) * (Number(p.cantidad) || 0))}</span>
+          </li>`,
+          )
+          .join('')}
+        <li class="flex justify-between gap-4 bg-lavanda p-4 font-bold">
+          <span>Total</span><span class="font-display text-xl text-morado">${formatPrice(o.total)}</span>
+        </li>
+      </ul>
+      <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+        <button type="button" data-print class="btn btn-outline">Imprimir recibo</button>
+        ${phone ? `<a href="${waLink(phone)}" target="_blank" rel="noopener" class="btn btn-whatsapp">Escribir al cliente</a>` : ''}
+      </div>`;
+    detail.querySelector('[data-print]')?.addEventListener('click', () => printReceipt(o));
+    openModal(modal);
+  }
+
+  function printReceipt(o: any) {
+    const w = window.open('', '_blank');
+    if (!w) return showToast('Permite las ventanas emergentes para imprimir.', 'warning');
+    const rows = productos(o)
+      .map(
+        (p: any) =>
+          `<tr><td>${Number(p.cantidad) || 0} x ${escapeHtml(p.nombre)}</td><td style="text-align:right">${formatPrice((Number(p.precio) || 0) * (Number(p.cantidad) || 0))}</td></tr>`,
+      )
+      .join('');
+    w.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Recibo</title>
+      <style>body{font-family:system-ui,sans-serif;max-width:360px;margin:24px auto;color:#1e1530}h1{font-size:20px;margin:0}td{padding:6px 0;border-bottom:1px solid #eee}table{width:100%;border-collapse:collapse;margin-top:16px}.t{font-weight:700;font-size:18px}</style>
+      </head><body><h1>E.F.D. Tienda Naturista</h1><p>${escapeHtml(cliente(o))}<br>${formatDate(o.fecha)}</p>
+      <table>${rows}<tr><td class="t">Total</td><td class="t" style="text-align:right">${formatPrice(o.total)}</td></tr></table>
+      <script>window.onload=()=>window.print()<\/script></body></html>`);
+    w.document.close();
+  }
+
+  filter.addEventListener('click', (e) => {
+    const chip = (e.target as HTMLElement).closest<HTMLElement>('[data-estado]');
+    if (!chip) return;
+    selected = chip.dataset.estado || 'todos';
+    render();
   });
+
+  list.addEventListener('click', async (e) => {
+    const target = e.target as HTMLElement;
+    const row = target.closest<HTMLElement>('[data-id]');
+    const order = orders.find((o) => o.id === row?.dataset.id);
+    if (!order) return;
+
+    if (target.closest('[data-view]')) showDetail(order);
+
+    if (target.closest('[data-delete]')) {
+      const ok = await (window as any).showConfirm(
+        'Eliminar pedido',
+        `Se borrará el pedido de ${cliente(order)}. Esta acción no se puede deshacer.`,
+      );
+      if (!ok) return;
+      try {
+        await deleteOrder(order.id);
+        orders = orders.filter((o) => o.id !== order.id);
+        render();
+        showToast('Pedido eliminado', 'success');
+      } catch (error) {
+        console.error(error);
+        showToast('No se pudo eliminar el pedido.', 'error');
+      }
+    }
+  });
+
+  list.addEventListener('change', async (e) => {
+    const select = (e.target as HTMLElement).closest<HTMLSelectElement>('[data-status]');
+    if (!select) return;
+    const order = orders.find((o) => o.id === select.dataset.status);
+    if (!order) return;
+    select.disabled = true;
+    try {
+      await updateOrderStatus(order, select.value);
+      const wasDiscounted = order.stockDescontado ?? estado(order) === 'completado';
+      order.estado = select.value;
+      order.stockDescontado = select.value === 'completado';
+      render();
+      if (select.value === 'completado' && !wasDiscounted) showToast('Pedido completado. Stock actualizado.', 'success');
+      else if (wasDiscounted && select.value !== 'completado') showToast('Estado cambiado. El stock se devolvió al inventario.', 'info');
+      else showToast('Estado actualizado', 'success');
+    } catch (error) {
+      console.error(error);
+      select.disabled = false;
+      showToast('No se pudo cambiar el estado.', 'error');
+    }
+  });
+
+  async function init() {
+    await requireAdmin();
+    orders = (await getOrders()).sort((a: any, b: any) => (b.fecha?.seconds || 0) - (a.fecha?.seconds || 0));
+    render();
+  }
+  init();
 </script>

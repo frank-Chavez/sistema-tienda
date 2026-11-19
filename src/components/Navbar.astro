@@ -1,273 +1,138 @@
 ---
-import { authStore } from '../store/auth.js';
-import { cartStore } from '../store/cart.js';
+import Logo from './Logo.astro';
+
+interface Props {
+  admin?: boolean;
+}
+const { admin = false } = Astro.props;
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const links = [
+  { href: '/', label: 'Inicio' },
+  { href: '/products', label: 'Productos' },
+];
 ---
 
-<nav
-  class="bg-white sticky top-0 z-50 shadow-sm border-b border-gray-100 transition-all duration-300"
->
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between items-center h-16">
-      <!-- Logo -->
-      <div class="shrink-0 flex items-center">
-        <a href="/" class="flex items-center gap-2 group">
-          <div
-            class="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg group-hover:bg-purple-700 transition-colors shadow-md shadow-purple-200"
-          >
-            E
-          </div>
-          <span
-            class="font-bold text-xl text-gray-900 tracking-tight group-hover:text-purple-600 transition-colors"
-            >E.F.D.</span
-          >
-        </a>
-      </div>
+<header class="sticky top-0 z-50 border-b border-borde/70 bg-white/85 backdrop-blur-md">
+  <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+    <Logo />
 
-      <!-- Desktop Menu -->
-      <div class="hidden md:flex items-center space-x-8">
-        <a
-          href="/"
-          class="text-gray-600 hover:text-purple-600 font-medium transition-colors"
-          >Inicio</a
-        >
-        <a
-          href="/products"
-          class="text-gray-600 hover:text-purple-600 font-medium transition-colors"
-          >Productos</a
-        >
-
-        <a
-          href="/cart"
-          class="relative text-gray-600 hover:text-purple-600 transition-colors flex items-center gap-1 group"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6 group-hover:scale-110 transition-transform"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-            ></path>
-          </svg>
-          <span
-            id="cart-badge"
-            class="absolute -top-2 -right-2 bg-purple-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-sm"
-            >0</span
-          >
-        </a>
-
-        <!-- Auth Section -->
-        <div id="auth-section" class="flex items-center space-x-4">
-          <!-- Populated by JS -->
+    <nav class="hidden items-center gap-1 md:flex" aria-label="Principal">
+      {
+        links.map((l) => (
           <a
-            href="/login"
-            class="text-gray-600 hover:text-purple-600 font-medium transition-colors"
-            >Iniciar Sesión</a
+            href={l.href}
+            aria-current={path === l.href ? 'page' : undefined}
+            class="rounded-full px-4 py-2 font-medium text-gris transition-colors hover:text-morado aria-[current=page]:bg-lavanda aria-[current=page]:text-morado"
           >
-          <a
-            href="/register"
-            class="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 hover:shadow-lg hover:shadow-purple-200 transition-all active:scale-95"
-            >Registro</a
-          >
-        </div>
-      </div>
+            {l.label}
+          </a>
+        ))
+      }
+    </nav>
 
-      <!-- Mobile menu button -->
-      <div class="md:hidden flex items-center">
-        <a href="/cart" class="relative text-gray-600 mr-4">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-            ></path>
-          </svg>
-          <span
-            id="mobile-cart-badge"
-            class="absolute -top-2 -right-2 bg-purple-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
-            >0</span
-          >
-        </a>
-        <button
-          id="mobile-menu-btn"
-          class="text-gray-600 hover:text-purple-600 focus:outline-none"
-        >
-          <svg
-            class="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 6h16M4 12h16M4 18h16"></path>
-          </svg>
-        </button>
+    <div class="flex items-center gap-2">
+      <a
+        href="/cart"
+        class="relative hidden h-11 w-11 items-center justify-center rounded-full text-tinta transition-colors hover:bg-lavanda hover:text-morado md:inline-flex"
+        aria-label="Ver carrito"
+      >
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 7h14l-1.2 11.1a2 2 0 0 1-2 1.9H8.2a2 2 0 0 1-2-1.9L5 7Zm4 0V6a3 3 0 0 1 6 0v1" />
+        </svg>
+        <span
+          data-cart-badge
+          hidden
+          class="absolute right-0.5 top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-oro px-1 text-[11px] font-bold text-ciruela"
+        >0</span>
+      </a>
+
+      <!-- Cuenta: se completa con JS -->
+      <div id="auth-section" class="relative">
+        <a href="/login" class="btn btn-primary h-10 min-h-10 px-4 text-sm">Ingresar</a>
       </div>
     </div>
   </div>
-
-  <!-- Mobile Menu Display -->
-  <div
-    id="mobile-menu"
-    class="md:hidden hidden bg-white border-t border-gray-100 absolute w-full shadow-lg"
-  >
-    <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-      <a
-        href="/"
-        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50"
-        >Inicio</a
-      >
-      <a
-        href="/products"
-        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50"
-        >Productos</a
-      >
-      <div id="mobile-auth-section" class="border-t border-gray-100 mt-2 pt-2">
-        <!-- Populated by JS -->
-        <a
-          href="/login"
-          class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50"
-          >Iniciar Sesión</a
-        >
-        <a
-          href="/register"
-          class="block px-3 py-2 mt-1 rounded-md text-base font-medium bg-purple-50 text-purple-700 hover:bg-purple-100"
-          >Registro</a
-        >
-      </div>
-    </div>
-  </div>
-</nav>
+</header>
 
 <script>
   import { authStore } from '../store/auth.js';
   import { cartStore } from '../store/cart.js';
+  import { escapeHtml } from '../lib/utils.js';
 
-  // Toggle mobile menu
-  const mobileBtn = document.getElementById('mobile-menu-btn');
-  const mobileMenu = document.getElementById('mobile-menu');
-
-  if (mobileBtn && mobileMenu) {
-    mobileBtn.addEventListener('click', () => {
-      mobileMenu.classList.toggle('hidden');
-    });
-  }
-
-  // Update Cart Badge
   function updateCartBadge() {
     const total = cartStore.getTotalItems();
-    const badge = document.getElementById('cart-badge');
-    const mobileBadge = document.getElementById('mobile-cart-badge');
-
-    if (badge && mobileBadge) {
-      if (total > 0) {
-        badge.textContent = total;
-        badge.classList.remove('hidden');
-        mobileBadge.textContent = total;
-        mobileBadge.classList.remove('hidden');
-      } else {
-        badge.classList.add('hidden');
-        mobileBadge.classList.add('hidden');
-      }
-    }
+    document.querySelectorAll<HTMLElement>('[data-cart-badge]').forEach((badge) => {
+      badge.textContent = total > 99 ? '99+' : String(total);
+      badge.hidden = total === 0;
+    });
   }
 
-  // Update Auth UI
   function updateAuthUI() {
     const section = document.getElementById('auth-section');
-    const mobileSection = document.getElementById('mobile-auth-section');
+    if (!section) return;
 
-    if (authStore.isLoggedIn()) {
-      const user = authStore.user;
-      const adminLink =
-        user?.rol === 'admin'
-          ? `<a href="/admin/dashboard" class="text-sm font-medium text-purple-600 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-100 hover:bg-purple-100 transition-colors">Panel Admin</a>`
-          : '';
-
-      const html = `
-        <div class="flex items-center gap-4">
-          ${adminLink}
-          <div class="flex items-center gap-2 group cursor-pointer relative">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 text-white flex items-center justify-center font-semibold text-sm shadow-sm ring-2 ring-white">
-              ${user?.nombre?.charAt(0)?.toUpperCase() || '?'}
-            </div>
-            <span class="text-sm font-medium text-gray-700 hidden lg:block">${user?.nombre || 'Usuario'}</span>
-            
-            <!-- Dropdown simple on hover via group -->
-            <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right z-50">
-              <div class="p-2">
-                <button id="logout-btn" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2">
-                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                   Cerrar Sesión
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      const mobileHtml = `
-        <div class="px-3 py-2 text-sm text-gray-500 bg-gray-50 rounded-md mb-2">Hola, <span class="font-medium text-gray-900">${user?.nombre || 'Usuario'}</span></div>
-        ${user?.rol === 'admin' ? `<a href="/admin/dashboard" class="block px-3 py-2 rounded-md text-base font-medium text-purple-600 bg-purple-50">Panel Admin</a>` : ''}
-        <button id="mobile-logout-btn" class="w-full text-left block px-3 py-2 mt-1 rounded-md text-base font-medium text-red-600 hover:bg-red-50">Cerrar Sesión</button>
-      `;
-
-      if (section) section.innerHTML = html;
-      if (mobileSection) mobileSection.innerHTML = mobileHtml;
-
-      // Re-attach listeners dynamically
-      document.getElementById('logout-btn')?.addEventListener('click', () => {
-        authStore.logout();
-        window.location.href = '/';
-      });
-      document
-        .getElementById('mobile-logout-btn')
-        ?.addEventListener('click', () => {
-          authStore.logout();
-          window.location.href = '/';
-        });
-    } else {
-      const html = `
-        <a href="/login" class="text-gray-600 hover:text-purple-600 font-medium transition-colors">Iniciar Sesión</a>
-        <a href="/register" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 hover:shadow-lg hover:shadow-purple-200 transition-all active:scale-95">Registro</a>
-      `;
-      const mobileHtml = `
-        <a href="/login" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50">Iniciar Sesión</a>
-        <a href="/register" class="block px-3 py-2 mt-1 rounded-md text-base font-medium bg-purple-50 text-purple-700 hover:bg-purple-100">Registro</a>
-      `;
-
-      if (section) section.innerHTML = html;
-      if (mobileSection) mobileSection.innerHTML = mobileHtml;
+    if (!authStore.isLoggedIn()) {
+      section.innerHTML = `
+        <a href="/login" class="btn btn-primary h-10 min-h-10 px-4 text-sm">Ingresar</a>`;
+      return;
     }
+
+    const user = authStore.user;
+    const nombre = escapeHtml(user?.nombre || 'Mi cuenta');
+    const inicial = escapeHtml((user?.nombre || '?').trim().charAt(0).toUpperCase());
+    const primerNombre = escapeHtml((user?.nombre || '').split(' ')[0]);
+
+    section.innerHTML = `
+      <button id="account-btn" type="button" aria-haspopup="menu" aria-expanded="false"
+        class="flex h-11 items-center gap-2 rounded-full pl-1 pr-1 transition-colors hover:bg-lavanda sm:pr-3">
+        <span class="flex h-9 w-9 items-center justify-center rounded-full bg-ciruela font-display text-sm font-bold text-oro-claro">${inicial}</span>
+        <span class="hidden text-sm font-semibold text-tinta sm:block">${primerNombre}</span>
+      </button>
+      <div id="account-menu" role="menu" hidden
+        class="absolute right-0 top-full mt-2 w-60 overflow-hidden rounded-2xl border border-borde bg-white p-2 shadow-[0_18px_40px_-16px_rgba(42,14,79,0.35)]">
+        <div class="px-3 py-2">
+          <p class="truncate text-sm font-semibold text-tinta">${nombre}</p>
+          <p class="truncate text-xs text-gris">${escapeHtml(user?.email || '')}</p>
+        </div>
+        ${
+          authStore.isAdmin()
+            ? `<a role="menuitem" href="/admin/dashboard" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-morado hover:bg-lavanda">Panel de administración</a>`
+            : ''
+        }
+        <a role="menuitem" href="/cart" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-tinta hover:bg-lavanda">Mi carrito</a>
+        <button role="menuitem" id="logout-btn" type="button" class="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[#b42318] hover:bg-[#fdecea]">Cerrar sesión</button>
+      </div>`;
+
+    document.getElementById('account-btn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setMenuOpen(!!document.getElementById('account-menu')?.hidden);
+    });
+
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+      await authStore.logout();
+      window.location.href = '/';
+    });
   }
 
-  // Initial updates & Event listeners
-  document.addEventListener('DOMContentLoaded', () => {
-    updateCartBadge();
-    updateAuthUI();
-
-    // Listen for custom store events
-    window.addEventListener('cart_change', () => {
-      updateCartBadge();
-    });
-
-    window.addEventListener('auth_change', () => {
-      updateAuthUI();
-    });
+  function setMenuOpen(open: boolean) {
+    const menu = document.getElementById('account-menu');
+    const btn = document.getElementById('account-btn');
+    if (!menu || !btn) return;
+    menu.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+  }
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('account-menu');
+    if (menu && !menu.contains(e.target as Node)) setMenuOpen(false);
   });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') setMenuOpen(false);
+  });
+
+  updateCartBadge();
+  updateAuthUI();
+  window.addEventListener('cart_change', updateCartBadge);
+  window.addEventListener('auth_change', updateAuthUI);
+  // Si Firebase dice que la sesión ya no existe, se actualiza el menú.
+  authStore.ready.then(updateAuthUI);
 </script>
