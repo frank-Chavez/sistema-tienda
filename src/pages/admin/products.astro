@@ -35,15 +35,36 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 
       <form id="product-form" class="space-y-5 p-5 sm:p-6">
         <input type="hidden" id="form-id" />
-        <div class="flex gap-4">
-          <div class="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-lavanda">
-            <img id="form-preview" alt="" class="hidden h-full w-full object-contain p-1 mix-blend-multiply" />
+        <fieldset>
+          <legend class="label">Foto del producto</legend>
+          <div class="flex gap-4">
+            <div class="relative flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-lavanda sm:h-32 sm:w-32">
+              <svg id="preview-empty" class="h-9 w-9 text-[#b9a6dc]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4V8Z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
+              <img id="form-preview" alt="Vista previa de la foto" class="absolute inset-0 hidden h-full w-full object-contain p-1 mix-blend-multiply" />
+              <div id="photo-busy" hidden class="absolute inset-0 flex items-center justify-center bg-white/80">
+                <div class="h-7 w-7 animate-spin rounded-full border-[3px] border-lavanda border-t-morado"></div>
+              </div>
+            </div>
+            <div class="flex grow flex-col justify-center gap-2">
+              <!-- capture="environment" abre directamente la cámara trasera en el celular -->
+              <label class="btn btn-primary w-full cursor-pointer">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4V8Z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
+                Tomar foto
+                <input id="photo-camera" type="file" accept="image/*" capture="environment" class="sr-only" />
+              </label>
+              <label class="btn btn-soft w-full cursor-pointer">
+                Elegir de la galería
+                <input id="photo-gallery" type="file" accept="image/*" class="sr-only" />
+              </label>
+              <button id="photo-remove" type="button" hidden class="text-sm font-semibold text-[#b42318] hover:underline">Quitar foto</button>
+            </div>
           </div>
-          <div class="grow">
-            <label for="form-image" class="label">Enlace de la imagen</label>
-            <input type="url" id="form-image" required class="field" placeholder="https://…" />
-          </div>
-        </div>
+          <p id="photo-hint" class="mt-2 text-sm text-gris">Toma la foto con buena luz y el producto centrado, sobre un fondo liso.</p>
+          <details id="url-box" class="mt-3">
+            <summary class="cursor-pointer text-sm font-semibold text-morado">O usar un enlace de internet</summary>
+            <input type="url" id="form-image" class="field mt-2" placeholder="https://…" />
+          </details>
+        </fieldset>
         <div>
           <label for="form-name" class="label">Nombre</label>
           <input type="text" id="form-name" required maxlength="80" class="field" placeholder="Ej. Aloe vera orgánico" />
@@ -89,6 +110,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
   import { showToast } from '../../lib/toast.js';
   import { openModal, closeModal, wireModal } from '../../lib/modal.js';
   import { escapeHtml, formatPrice } from '../../lib/utils.js';
+  import { compressImage, isDataImage } from '../../lib/imageCompress.js';
 
   const $ = <T extends HTMLElement = HTMLInputElement>(id: string) => document.getElementById(id) as T;
   const list = $<HTMLElement>('products-list');
@@ -157,13 +179,60 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     if (selectedValue) select.value = selectedValue;
   }
 
-  function updatePreview() {
-    const url = $('form-image').value.trim();
-    preview.classList.toggle('hidden', !url);
-    if (url) preview.src = url;
+  // Imagen actual del formulario: una foto comprimida (data URL) o un enlace.
+  let photoData = '';
+
+  function currentImage() {
+    return photoData || $('form-image').value.trim();
   }
-  $('form-image').addEventListener('input', updatePreview);
-  preview.addEventListener('error', () => preview.classList.add('hidden'));
+
+  function updatePreview() {
+    const src = currentImage();
+    preview.classList.toggle('hidden', !src);
+    $<HTMLElement>('preview-empty').classList.toggle('hidden', !!src);
+    $<HTMLElement>('photo-remove').hidden = !photoData;
+    if (src) preview.src = src;
+  }
+  $('form-image').addEventListener('input', () => {
+    if ($('form-image').value.trim()) photoData = '';
+    updatePreview();
+  });
+  preview.addEventListener('error', () => {
+    preview.classList.add('hidden');
+    $<HTMLElement>('preview-empty').classList.remove('hidden');
+  });
+
+  async function handlePhoto(input: HTMLInputElement) {
+    const file = input.files?.[0];
+    input.value = ''; // permite volver a elegir la misma foto
+    if (!file) return;
+
+    const busy = $<HTMLElement>('photo-busy');
+    const hint = $<HTMLElement>('photo-hint');
+    busy.hidden = false;
+    submitBtn.disabled = true;
+    try {
+      photoData = await compressImage(file);
+      $('form-image').value = '';
+      const kb = Math.round((photoData.length * 3) / 4 / 1024);
+      hint.textContent = `Foto lista (${kb} KB). Se guardará al tocar "Guardar producto".`;
+      updatePreview();
+    } catch (error: any) {
+      console.error(error);
+      showToast(error?.message || 'No se pudo usar esa foto. Prueba con otra.', 'error');
+    } finally {
+      busy.hidden = true;
+      submitBtn.disabled = false;
+    }
+  }
+  $('photo-camera').addEventListener('change', (e) => handlePhoto(e.currentTarget as HTMLInputElement));
+  $('photo-gallery').addEventListener('change', (e) => handlePhoto(e.currentTarget as HTMLInputElement));
+  $('photo-remove').addEventListener('click', () => {
+    photoData = '';
+    $<HTMLElement>('photo-hint').textContent =
+      'Toma la foto con buena luz y el producto centrado, sobre un fondo liso.';
+    updatePreview();
+  });
 
   function openForm(product?: any) {
     form.reset();
@@ -175,9 +244,14 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       $('form-price').value = product.precio ?? '';
       $('form-stock').value = product.stock ?? '';
       $<HTMLSelectElement>('form-status').value = product.estado || 'activo';
-      $('form-image').value = product.imagen || '';
       $<HTMLTextAreaElement>('form-description').value = product.descripcion || '';
     }
+    // Si el producto ya tenía una foto subida, se conserva; si era un enlace, va al campo de enlace.
+    photoData = isDataImage(product?.imagen) ? product.imagen : '';
+    $('form-image').value = photoData ? '' : product?.imagen || '';
+    ($<HTMLDetailsElement>('url-box')).open = !!$('form-image').value;
+    $<HTMLElement>('photo-hint').textContent =
+      'Toma la foto con buena luz y el producto centrado, sobre un fondo liso.';
     updatePreview();
     openModal(modal);
   }
@@ -222,9 +296,13 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       stock: Math.max(0, Math.floor(Number($('form-stock').value) || 0)),
       categoria: $<HTMLSelectElement>('form-category').value,
       estado: $<HTMLSelectElement>('form-status').value,
-      imagen: $('form-image').value.trim(),
+      imagen: currentImage(),
       descripcion: $<HTMLTextAreaElement>('form-description').value.trim(),
     };
+    if (!product.imagen) {
+      showToast('Agrega una foto del producto o pega un enlace.', 'warning');
+      return;
+    }
     if (!product.categoria) {
       showToast('Primero crea una categoría en la sección Categorías.', 'warning');
       return;
