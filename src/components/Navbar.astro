@@ -1,5 +1,6 @@
 ---
 import Logo from './Logo.astro';
+import { CONSULTAS_URL } from '../lib/utils.js';
 
 interface Props {
   admin?: boolean;
@@ -28,6 +29,12 @@ const links = [
           </a>
         ))
       }
+      <a
+        href={CONSULTAS_URL}
+        class="rounded-full px-4 py-2 font-medium text-gris transition-colors hover:text-morado"
+      >
+        Consultas
+      </a>
     </nav>
 
     <div class="flex items-center gap-2">

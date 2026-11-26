@@ -1,5 +1,6 @@
 ---
 import Logo from './Logo.astro';
+import { CONSULTAS_URL } from '../lib/utils.js';
 const currentYear = new Date().getFullYear();
 ---
 
@@ -19,6 +20,7 @@ const currentYear = new Date().getFullYear();
         <ul class="mt-4 space-y-3">
           <li><a href="/products" class="hover:text-white">Todos los productos</a></li>
           <li><a href="/cart" class="hover:text-white">Mi carrito</a></li>
+          <li><a href={CONSULTAS_URL} class="hover:text-white">Reservar una consulta</a></li>
           <li><a href="/login" class="hover:text-white">Mi cuenta</a></li>
         </ul>
       </div>

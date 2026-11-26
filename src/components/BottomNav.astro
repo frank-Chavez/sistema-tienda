@@ -1,5 +1,6 @@
 ---
 // Barra inferior para celular: lo importante queda al alcance del pulgar.
+import { CONSULTAS_URL } from '../lib/utils.js';
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 const items = [
   {
@@ -19,6 +20,13 @@ const items = [
     badge: true,
   },
   {
+    href: CONSULTAS_URL,
+    label: 'Consultas',
+    icon: 'M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9-1.9 5.1-1.9-5.1L5 10.5l5.1-1.9L12 3.5ZM18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2Z',
+    external: true,
+    sameTab: true,
+  },
+  {
     href: 'https://wa.me/51975279174?text=Hola%2C%20quisiera%20informaci%C3%B3n%20sobre%20sus%20productos.',
     label: 'WhatsApp',
     icon: 'M12 3.5a8.5 8.5 0 0 0-7.3 12.8L3.5 20.5l4.3-1.1A8.5 8.5 0 1 0 12 3.5Zm-3 5c.3-.6.6-.6.9-.6h.6c.2 0 .4 0 .6.5l.8 1.9c.1.2.1.4 0 .6l-.6.8c-.1.2-.1.3 0 .5.6 1 1.4 1.8 2.5 2.4.2.1.4.1.5 0l.8-.9c.2-.2.4-.2.6-.1l1.9.9c.2.1.3.2.3.4 0 .7-.4 1.6-1.2 1.9-1 .4-2.6.2-4.6-1.3-1.6-1.2-2.7-2.9-3-3.9-.3-1-.1-2.2.5-2.6Z',
@@ -31,7 +39,7 @@ const items = [
   class="fixed inset-x-0 bottom-0 z-50 border-t border-borde bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
   aria-label="Navegación rápida"
 >
-  <ul class="grid grid-cols-4">
+  <ul class="grid grid-cols-5">
     {
       items.map((item) => {
         const active = !item.external && path === item.href;
@@ -39,8 +47,8 @@ const items = [
           <li>
             <a
               href={item.href}
-              target={item.external ? '_blank' : undefined}
-              rel={item.external ? 'noopener' : undefined}
+              target={item.external && !item.sameTab ? '_blank' : undefined}
+              rel={item.external && !item.sameTab ? 'noopener' : undefined}
               aria-current={active ? 'page' : undefined}
               class={`relative flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors ${
                 active ? 'text-morado' : 'text-gris'

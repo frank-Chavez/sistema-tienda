@@ -46,3 +46,6 @@ export function safeRedirect(target, fallback = '/') {
 
 /** Número de WhatsApp de la tienda. */
 export const STORE_PHONE = '51975279174';
+
+/** Página para reservar lecturas y baños de florecimiento. */
+export const CONSULTAS_URL = 'https://efd-consultas.netlify.app/';

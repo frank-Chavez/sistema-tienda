@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { STORE_PHONE } from '../lib/utils.js';
+import { STORE_PHONE, CONSULTAS_URL } from '../lib/utils.js';
 
 const waHref = `https://wa.me/${STORE_PHONE}?text=${encodeURIComponent('Hola, quisiera información sobre sus productos.')}`;
 
@@ -78,6 +78,27 @@ const steps = [
     </p>
 
     <a href="/products" class="btn btn-soft mt-8 w-full sm:hidden">Ver todo el catálogo</a>
+  </section>
+
+  <!-- Consultas: lecturas y baños, en otra web del mismo negocio -->
+  <section class="mx-auto max-w-7xl px-4 pt-20 sm:px-6 lg:px-8">
+    <div class="relative overflow-hidden rounded-[28px] bg-ciruela px-6 py-10 text-white sm:px-10 md:flex md:items-center md:justify-between md:gap-10 md:py-12">
+      <div
+        class="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-morado-vivo/40 blur-3xl"
+        aria-hidden="true"
+      >
+      </div>
+      <div class="relative max-w-xl">
+        <h2 class="text-3xl font-bold sm:text-4xl">Lecturas y baños de florecimiento</h2>
+        <p class="mt-3 leading-relaxed text-white/75">
+          Lectura de cartas, lectura de la mano y baños de florecimiento, con atención en persona en el
+          local. Elige el servicio, el día y la hora, y reserva por WhatsApp.
+        </p>
+      </div>
+      <a href={CONSULTAS_URL} class="btn btn-gold relative mt-7 h-12 w-full px-7 text-base sm:w-auto md:mt-0">
+        Reservar mi consulta
+      </a>
+    </div>
   </section>
 
   <!-- Cómo pedir: es una secuencia real, por eso va numerada -->
