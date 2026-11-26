@@ -31,6 +31,20 @@ const links = [
     </nav>
 
     <div class="flex items-center gap-2">
+      {
+        admin && (
+          <a
+            href="/"
+            class="btn btn-soft h-10 min-h-10 gap-1.5 px-3.5 text-sm sm:px-4"
+            aria-label="Salir del panel y ver la tienda"
+          >
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1v-8.5Z" />
+            </svg>
+            Ver tienda
+          </a>
+        )
+      }
       <a
         href="/cart"
         class="relative hidden h-11 w-11 items-center justify-center rounded-full text-tinta transition-colors hover:bg-lavanda hover:text-morado md:inline-flex"
@@ -95,9 +109,11 @@ const links = [
           <p class="truncate text-xs text-gris">${escapeHtml(user?.email || '')}</p>
         </div>
         ${
-          authStore.isAdmin()
-            ? `<a role="menuitem" href="/admin/dashboard" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-morado hover:bg-lavanda">Panel de administración</a>`
-            : ''
+          location.pathname.startsWith('/admin')
+            ? `<a role="menuitem" href="/" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-morado hover:bg-lavanda">Ver la tienda</a>`
+            : authStore.isAdmin()
+              ? `<a role="menuitem" href="/admin/dashboard" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-morado hover:bg-lavanda">Panel de administración</a>`
+              : ''
         }
         <a role="menuitem" href="/cart" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-tinta hover:bg-lavanda">Mi carrito</a>
         <button role="menuitem" id="logout-btn" type="button" class="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[#b42318] hover:bg-[#fdecea]">Cerrar sesión</button>
